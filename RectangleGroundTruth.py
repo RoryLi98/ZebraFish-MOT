@@ -4,14 +4,20 @@ import glob
 import os
 import string
 
-GroundTruth = np.loadtxt('D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt\\gt.txt', delimiter=',' , usecols=[0,1,14,15,16,17])
+# GroundTruth = np.loadtxt('D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt\\gt.txt', delimiter=',' , usecols=[0,1,14,15,16,17]) #存放正视图GroundTruth的文件夹路径
+GroundTruth = np.loadtxt('D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt\\gt.txt', delimiter=',' , usecols=[0,1,7,8,9,10]) #存放正视图GroundTruth的文件夹路径
 print(GroundTruth.shape)
 print(GroundTruth.shape[0])
-WSI_MASK_PATH = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\imgF'#存放图片的文件夹路径
+
+# WSI_MASK_PATH = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\imgF' #存放正视图图片的文件夹路径  
+WSI_MASK_PATH = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\imgT' #存放正视图图片的文件夹路径
+
 paths = glob.glob(os.path.join(WSI_MASK_PATH, '*.jpg'))
 paths.sort()
 
-savepath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt_F\\'
+# savepath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt_F\\' #存放保存好修正图片的文件夹路径 
+savepath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt_T\\' #存放保存好修正图片的文件夹路径 
+
 CountImage = 1
 CountText = 0
 color = (255,255,255)
@@ -65,5 +71,5 @@ for path in paths:
 
     if(cv2.waitKey(1) == 27):
         break
-print("Done")
 
+print("Done")
