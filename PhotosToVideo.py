@@ -3,7 +3,9 @@ import cv2
 import glob
 import os
 
-WSI_MASK_PATH = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt_F\\'#存放图片的文件夹路径
+# WSI_MASK_PATH = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt_F\\'   #存放保存好修正图片的文件夹路径 
+WSI_MASK_PATH = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt_T\\'    #存放保存好修正图片的文件夹路径 
+
 paths = glob.glob(os.path.join(WSI_MASK_PATH, '*.png'))
 paths.sort()
 
