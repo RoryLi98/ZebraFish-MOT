@@ -8,11 +8,11 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import matplotlib.pyplot as plt
 
-savepath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-04\\MatplotlibTracklet\\X\\' #存放保存好修正图片的文件夹路径 
+savepath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\MatplotlibTracklet\\T\\' #存放保存好修正图片的文件夹路径 
 
 
 fig = plt.figure(figsize=(8,7))
-csvpath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-04\\processed\\tracks_3d_interpolated.csv'
+csvpath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\processed\\tracks_3d_interpolated.csv'
 Dataframe = pd.read_csv(csvpath)
 # Dataframe1=Dataframe.sort_values('frame',inplace=True,ascending=True)
 i=1
@@ -29,9 +29,9 @@ while(i<=MaxNumber):
             ax.set_xlim(0,30)
             ax.set_ylim(0,30)
             ax.set_zlim(0,30)
-            # ax.view_init(elev=-90, azim=270)    #顶视图
+            ax.view_init(elev=-90, azim=270)    #顶视图
             # ax.view_init(elev=-180, azim=270)    #正视图
-            ax.view_init(elev=-180+45, azim=270-45) #正视图
+            # ax.view_init(elev=-180+45, azim=270-45) #正视图
 
             RowData = Data.iloc[row]
             if(RowData['id'] == 0):
@@ -66,3 +66,4 @@ while(i<=MaxNumber):
         # plt.pause(0.0000001)     
         plt.clf()
     i+=1
+print("Done")
