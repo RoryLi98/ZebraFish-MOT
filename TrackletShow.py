@@ -8,10 +8,10 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import matplotlib.pyplot as plt
 
-savepath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\MatplotlibTracklet\\X\\' #存放保存好修正图片的文件夹路径 
+savepath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-03\\MatplotlibTracklet\\X\\' #存放保存好修正图片的文件夹路径 
 
 fig = plt.figure(figsize=(8,7))
-csvpath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\processed\\tracks_3d_interpolated.csv'
+csvpath = 'D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-03\\processed\\tracks_3d_interpolated.csv'
 Dataframe = pd.read_csv(csvpath)
 # Dataframe1=Dataframe.sort_values('frame',inplace=True,ascending=True)
 i=1

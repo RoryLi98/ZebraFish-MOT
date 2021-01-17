@@ -1,4 +1,4 @@
-Filename,Object ID,Annotation tag,UpperLeftCornerX,UpperLeftCornerY,LowerRightCornerX,LowerRightCornerY,Confidence,Frame
+Filename,Object ID,Annotation tag,Upper left corner X,Upper left corner Y,Lower right corner X,Lower right corner Y,Confidence,Frame
 000001.jpg,-1,Zebrafish,1675.6458740234375,924.9663696289062,1758.77783203125,1060.351318359375,0.9999998807907104,1.0
 000001.jpg,-1,Zebrafish,1557.361572265625,734.9397583007812,1722.263671875,785.5193481445312,0.9999991655349731,1.0
 000001.jpg,-1,Zebrafish,2588.915771484375,454.32806396484375,2703.03515625,514.7673950195312,0.9999338388442993,1.0
