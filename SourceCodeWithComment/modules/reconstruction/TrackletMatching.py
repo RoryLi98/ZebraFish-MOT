@@ -14,7 +14,7 @@ from common.Track import Track
 from modules.reconstruction.Triangulate import Triangulate
 
 
-class TrackletMatcher:
+class TrackletMatcher:    # 2D -> 3D
     """
     Class implementation for associating 2D tracklets into 3D tracklets        
     """
@@ -30,7 +30,7 @@ class TrackletMatcher:
         # Load settings and data
         self.loadSettings(dataPath)
         self.loadTracklets(dataPath)
-        self.cams = prepareCams(dataPath) # Load camera objects
+        self.cams = prepareCams(dataPath) # Load camera objects  输入pkl文件路径
 
         # Internal stuff
         self.graph = nx.DiGraph()
@@ -38,19 +38,20 @@ class TrackletMatcher:
         self.triangulated = {}
 
 
-    def loadSettings(self,path):
+    def loadSettings(self,path):    # 读入配置内容：
+        
         """
         Load settings from config file in the provided path.
         
         Config file includes information on the following, which is set in the object:
-            reprojection_err_mean: The mean value of a Gaussian distribution of reprojection errors
-            reprojection_err_std: The standard deviation of a Gaussian distribution of reprojection errors
-            movement_err_mean: The mean value of a Gaussian distribution of movement errors
-            movement_err_std: The standard deviation of a Gaussian distribution of movement errors
-            same_view_max_overlap: The maximum allowed frame overlap of two tracklets
-            tracklet_min_length: Minimum trackelt length
-            camera_1_sync_frame: Sync frame for camera 1
-            camera_2_sync_frame: Sync frame for camera 2 
+            reprojection_err_mean: The mean value of a Gaussian distribution of reprojection errors    重投影的平均差
+            reprojection_err_std: The standard deviation of a Gaussian distribution of reprojection errors    重投影的标准差
+            movement_err_mean: The mean value of a Gaussian distribution of movement errors    移动的平均差
+            movement_err_std: The standard deviation of a Gaussian distribution of movement errors    移动的标准差    
+            same_view_max_overlap: The maximum allowed frame overlap of two tracklets    允许两跟踪轨迹交叠  
+            tracklet_min_length: Minimum tracklet length    轨迹的最小长度    
+            camera_1_sync_frame: Sync frame for camera 1    摄像头1的同步帧
+            camera_2_sync_frame: Sync frame for camera 2    摄像头2的同步帧
             
         Input:
             path: String path to the folder where the settings.ini file is located
@@ -92,7 +93,7 @@ class TrackletMatcher:
         self.camera2_length = c.getint("cam2_length")        
 
 
-    def loadTracklets(self,path):
+    def loadTracklets(self,path):    # 读入2D轨迹
         """
         Loads the 2D tracklets extracted by TrackerVisual.py
         The tracklets are loaded as dicts, where the key is a combination of the tracklet ID and camera ID
@@ -104,20 +105,20 @@ class TrackletMatcher:
         self.cam1Tracks = csv2Tracks(os.path.join(path, 'processed/tracklets_2d_cam1.csv'),
                                      offset=self.camera1_offset,
                                      minLen=self.trackletMinLength,
-                                     maxFrame=self.camera1_length)
+                                     maxFrame=self.camera1_length)    # 读入摄像头1的轨迹
         self.cam2Tracks = csv2Tracks(os.path.join(path,'processed/tracklets_2d_cam2.csv'),
                                      offset=self.camera2_offset,
                                      minLen=self.trackletMinLength,
-                                     maxFrame=self.camera2_length) 
+                                     maxFrame=self.camera2_length)    # 读入摄像头2的轨迹 
 
-        cam1Info = "Camera 1\n\tLength: {}\n\tOffset: {}\n\tUnique IDs: {}".format(self.camera1_length, self.camera1_offset, len(self.cam1Tracks))
-        cam2Info = "Camera 2\n\tLength: {}\n\tOffset: {}\n\tUnique IDs: {}".format(self.camera2_length, self.camera2_offset, len(self.cam2Tracks))
+        cam1Info = "Camera 1\n\tLength: {}\n\tOffset: {}\n\tUnique IDs: {}".format(self.camera1_length, self.camera1_offset, len(self.cam1Tracks))    # 打印摄像头1视频的长度、偏移和轨迹条数
+        cam2Info = "Camera 2\n\tLength: {}\n\tOffset: {}\n\tUnique IDs: {}".format(self.camera2_length, self.camera2_offset, len(self.cam2Tracks))    # 打印摄像头2视频的长度、偏移和轨迹条数
         print(cam1Info)
         print(cam2Info)
         
             
 
-    def withinAquarium(self,x,y,z):
+    def withinAquarium(self,x,y,z):    #判断座标点是否在鱼缸内
         """
         Checks whether the provided x,y,z coordinates are inside the aquarium.
         
@@ -139,7 +140,7 @@ class TrackletMatcher:
         return True
 
 
-    def findConcurrent(self,track,candidates):
+    def findConcurrent(self,track,candidates):    
         """
         Finds the concurrent tracks (i.e. within the same span of frames) between a specific track and a set of  othertracks 
         
