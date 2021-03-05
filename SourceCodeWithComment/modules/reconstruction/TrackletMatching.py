@@ -118,7 +118,7 @@ class TrackletMatcher:    # 2D -> 3D
         
             
 
-    def withinAquarium(self,x,y,z):    #判断座标点是否在鱼缸内
+    def withinAquarium(self,x,y,z):    # 判断座标点是否在鱼缸内
         """
         Checks whether the provided x,y,z coordinates are inside the aquarium.
         
@@ -140,7 +140,7 @@ class TrackletMatcher:    # 2D -> 3D
         return True
 
 
-    def findConcurrent(self,track,candidates):    
+    def findConcurrent(self,track,candidates):    # 求并发的轨迹
         """
         Finds the concurrent tracks (i.e. within the same span of frames) between a specific track and a set of  othertracks 
         
@@ -154,18 +154,18 @@ class TrackletMatcher:    # 2D -> 3D
         
         concurrent = []
         for c in candidates:
-            frames = np.intersect1d(track.frame, candidates[c].frame)
-            if(len(frames) == 0):
+            frames = np.intersect1d(track.frame, candidates[c].frame)    # 求交集
+            if(len(frames) == 0):    # 无交集
                 continue        
             concurrent.append(candidates[c])
         return concurrent
 
 
-    def calcMatchWeight(self,track1,track2):
+    def calcMatchWeight(self,track1,track2):    #从两个视角计算两轨迹之间的权重
         """
         Calculate the weight between two tracks from different views.
-        The weight is a weighted median value of the inverse CDF value of the reprojection errors between the two tracks.
-        The Gaussian CDF is used, with parameters laoded in the config file, and it is inverted so value below the mean (i.e. towards 0) is trusted more than value above
+        The weight is a weighted median value of the inverse CDF value of the reprojection errors between the two tracks.    这个权重是 两轨迹 重投影差值的逆累积分布函数值 的加权中位数
+        The Gaussian CDF is used, with parameters loaded in the config file, and it is inverted so value below the mean (i.e. towards 0) is trusted more than value above
         
         Input:
             track1: Track obejct from the top camera
@@ -176,9 +176,9 @@ class TrackletMatcher:    # 2D -> 3D
             track3d: Track object containing the 3D tracklet
         """
         
-        frames = np.intersect1d(track1.frame, track2.frame)
+        frames = np.intersect1d(track1.frame, track2.frame)    # 求轨迹1和轨迹2的交集
 
-        # Prepare new 3d track for saving triangulated information
+        # Prepare new 3d track for saving triangulated information    准备存入3D轨迹的三角信息
         track3d = Track()
         track3d.errors = []
         track3d.reproj = []
