@@ -88,7 +88,7 @@ class TrackFinalizer:    # 插值
 
 
     ### Calculate distances
-    def getTemporalShift(self, mainTrack, galleryTrack):    # 计算主轨迹和备选区轨迹的时间距离 如果交叠返回-1
+    def getTemporalShift(self, mainTrack, galleryTrack):    # 计算 mainTrack 和 galleryTrack 之间的帧数距离 如果两个 Track 有交叠返回-1
         '''
         Calculates the temporal distance between the main and gallery track. If the tracks are overlapping, a distance of -1 is returned
         
@@ -102,14 +102,14 @@ class TrackFinalizer:    # 插值
         ## Currently doesnt accept galleryTracks that occupy any of the mainTrack span
         
         if mainTrack.frame[0] > galleryTrack.frame[-1]:
-            return (0, mainTrack.frame[0] - galleryTrack.frame[-1])
+            return (0, mainTrack.frame[0] - galleryTrack.frame[-1])    # 0 表示 gallery track先
         elif mainTrack.frame[-1] < galleryTrack.frame[0]:
-            return (1, galleryTrack.frame[0] - mainTrack.frame[-1])
+            return (1, galleryTrack.frame[0] - mainTrack.frame[-1])    # 1 表示 mainTrack track先
         else:
-            return (-1,-1)
+            return (-1,-1)    # 两个 Track 有交叠
         
 
-    def getSpaitalDistance(self, mainTrack, galleryTrack, trackOrder):
+    def getSpaitalDistance(self, mainTrack, galleryTrack, trackOrder):    # 算 mainTrack与 galleryTrack之间的空间欧式距离 如果两轨迹有交叠，返回-1
         '''
         Calculates the spatial distance between two tracks, depending on the temporal order of the tracks
         If the tracks are overlapping, -1 is returned
@@ -136,13 +136,13 @@ class TrackFinalizer:    # 插值
         mt3D = self.frameTo3DCoord(mainTrack, mtIdx)
         gt3D = self.frameTo3DCoord(galleryTrack, gtIdx)
     
-        return np.linalg.norm(gt3D - mt3D)
+        return np.linalg.norm(gt3D - mt3D)    # 求二范数 即空间欧式距离
 
 
     def getInternalDistances(self, mainTrack, galleryTrack):
         '''
-        Determines spatio-temporal distances when two tracks overlap (Using only the known 3D positions).    确定两条轨道重叠时的时空距离
-        This is done by constructing a graph, where each node is a detection in a frame, and the edge weights are the reciporal spatial distance between the adjacent nodes
+        Determines spatio-temporal distances when two tracks overlap (Using only the known 3D positions).    当轨迹交叠时，确定两条轨道重叠时的时空距离
+        This is done by constructing a graph, where each node is a detection in a frame, and the edge weights are the reciprocal spatial distance between the adjacent nodes
         The path which minimizes the total travelled distance is then found.
         THe spatio-temporal distances are then based on the times where the graph switches between the tracks i.e. we base it on when we actually combine the tracks.
 
@@ -161,10 +161,10 @@ class TrackFinalizer:    # 插值
         gtStart = galleryTrack.frame[0]
         gtEnd = galleryTrack.frame[-1]
 
-        start = max(mtStart, gtStart)
+        start = max(mtStart, gtStart)    # 取交集
         end = min(mtEnd, gtEnd)
 
-        frames = list(np.linspace(start, end, end-start+1, dtype=np.int))
+        frames = list(np.linspace(start, end, end-start+1, dtype=np.int))    # 做等差数组 即交集的每帧
 
         ## Add the detections just before/after the intersection, if there are any
         for track in [mainTrack, galleryTrack]:
@@ -273,14 +273,14 @@ class TrackFinalizer:    # 插值
         gt = self.tracks[galleryTrackID]
         
         # Get spatio-temporal distances
-        trackOrder, temporalShift = self.getTemporalShift(mt, gt)
-        spatialDiff = self.getSpaitalDistance(mt, gt, trackOrder)
+        trackOrder, temporalShift = self.getTemporalShift(mt, gt)    # 时间距离  trackOrder表示谁先谁后
+        spatialDiff = self.getSpaitalDistance(mt, gt, trackOrder)    # 空间距离  根据谁先谁后，算空间距离
         
         # Get detection overlap between main and gallerytrack, as count and ratio of full gallery track length
-        intersecting_frames = len(np.intersect1d(mt.frame, gt.frame))
-        intersection_ratio = intersecting_frames/len(gt.frame)
+        intersecting_frames = len(np.intersect1d(mt.frame, gt.frame))    # 求交叠的帧号
+        intersection_ratio = intersecting_frames/len(gt.frame)    # 求交叠率 分母：gallery track的帧数
 
-        # If tracks are overlapping, get internal spatio-temporal distances. Else set to invalid values
+        # If tracks are overlapping, get internal spatio-temporal distances. Else set to invalid values    若轨迹有交叠
         if temporalShift == -1:
             internalSpatialDistM, internalTemporalDistM, trackIndecies = self.getInternalDistances(mt, gt)
             internalSpatialDist = np.mean(internalSpatialDistM)
@@ -1025,12 +1025,12 @@ def updateIds(df, paths, verbose=True):
     return linked
 
 
-def interpolate(df, dataPath):    
+def interpolate(df, dataPath):    # 线性插值
     """
     In case of missing frames in the constructed 3D tracks, the positons are linearly interpolated
     
     Input:
-        df: Pandas Dataframe containing a set of 3D tracks
+        df: Pandas Dataframe containing a set of 3D tracks    
         dataPath: String path to the main folder
         
     Output:
@@ -1041,23 +1041,23 @@ def interpolate(df, dataPath):
     c = config['TrackletMatcher']
     reprojMeanErr = c.getfloat('reprojection_err_mean')
 
-    # Prepare 'interpolated' column
+    # Prepare 'interpolated' column    创建新列 'interpolated'
     df['interpolated'] = [0]*len(df)
 
     # Prepare dummy row
-    dummyRow = df.iloc[0].copy()
+    dummyRow = df.iloc[0].copy()    # 取第0行数据 并初始化 iloc通过行号获取行数据
     dummyRow['3d_x'] = -1
     dummyRow['3d_y'] = -1
     dummyRow['3d_z'] = -1
     dummyRow['err'] = -1
     
-    dummyRow['cam1_proj_x'] = -1
-    dummyRow['cam1_proj_y'] = -1
+    dummyRow['cam1_proj_x'] = -1    # 待更新对象
+    dummyRow['cam1_proj_y'] = -1    # 待更新对象
     dummyRow['cam1_x'] = None
     dummyRow['cam1_y'] = None
 
-    dummyRow['cam2_proj_x'] = -1
-    dummyRow['cam2_proj_y'] = -1
+    dummyRow['cam2_proj_x'] = -1    # 待更新对象
+    dummyRow['cam2_proj_y'] = -1    # 待更新对象
     dummyRow['cam2_x'] = None
     dummyRow['cam2_y'] = None
 
@@ -1065,34 +1065,34 @@ def interpolate(df, dataPath):
     interpolated = pd.DataFrame()
     trackIds = df['id'].unique()
     for i in trackIds:
-        currTrack = df[df['id'] == i]
+        currTrack = df[df['id'] == i]    # 取 id为 i的行
 
         # Insert dummy rows at missing frames
-        frames = currTrack['frame'].unique()
-        for f in range(int(frames[0]),int(frames[-1])):
+        frames = currTrack['frame'].unique()    
+        for f in range(int(frames[0]),int(frames[-1])):    # 遍历之间的帧来查找缺失帧号
             # Check if frame is missing
-            if(len(currTrack[currTrack['frame'] == f]) == 0):
-                dummyRow['frame'] = f
-                dummyRow['id'] = i
-                currTrack = currTrack.append(dummyRow)
+            if(len(currTrack[currTrack['frame'] == f]) == 0):    # 取得缺失的帧号
+                dummyRow['frame'] = f    # 填补缺失帧号
+                dummyRow['id'] = i    # 填补缺失ID
+                currTrack = currTrack.append(dummyRow)    # 填补缺失行（帧）
         # Sort frames ascending
-        currTrack = currTrack.sort_values(by=['frame'], ascending=[True])
+        currTrack = currTrack.sort_values(by=['frame'], ascending=[True])    # 按照帧号排序
         
         # Linear interpolation of cam1 and cam2 information
-        currTrack = currTrack.astype(float)
-        for columnHeader in currTrack.columns:
-            if "cam" in columnHeader:
-                tmp = currTrack[columnHeader].copy()
-                tmp[tmp == -1] = np.nan
-                currTrack[columnHeader] = tmp.interpolate(method="linear", limit_direction = "both", axis=0)
-        interpolated = interpolated.append(currTrack,sort=False)
+        currTrack = currTrack.astype(float)    # 转为浮点数
+        for columnHeader in currTrack.columns:    #遍历列索引
+            if "cam" in columnHeader:    
+                tmp = currTrack[columnHeader].copy()    # 把要插值的那列取出
+                tmp[tmp == -1] = np.nan    # 将值为 -1 的那几行，置为nan
+                currTrack[columnHeader] = tmp.interpolate(method="linear", limit_direction = "both", axis=0)    # 沿着 index轴进行双向线性插值
+        interpolated = interpolated.append(currTrack,sort=False)    #添加入插值后的数据，先不排序
 
-    # Remove rows with NaN values
+    # Remove rows with NaN values    移除带有NaN值的行，即剔除补的dummy帧
     interpolated = interpolated[np.isfinite(interpolated['cam1_x'])]
     interpolated = interpolated[np.isfinite(interpolated['cam2_x'])]
 
     # Triangulate using interpolated 2D detections
-    interpolatedRows = np.where(interpolated['err'] == -1)[0]
+    interpolatedRows = np.where(interpolated['err'] == -1)[0]    # 得到 err为-1的行索引
     tr = Triangulate()
     cams = prepareCams(dataPath)
     newRows = pd.DataFrame()
@@ -1109,7 +1109,7 @@ def interpolate(df, dataPath):
         p1 = cams[1].forwardprojectPoint(*p)
         p2 = cams[2].forwardprojectPoint(*p)
 
-        # Calc reprojection error and probability
+        # Calc reprojection error and probability    计算重投影误差
         err1 = np.linalg.norm(np.array(cam1Pos)-p1)
         err2 = np.linalg.norm(np.array(cam2Pos)-p2)        
         err = err1 + err2                
@@ -1157,34 +1157,34 @@ if __name__ == '__main__':
     tf = TrackFinalizer(dataPath) 
 
     # Link tracklets if necessary
-    if(len(tracks) > tf.n_fish):
+    if(len(tracks) > tf.n_fish):    # 轨迹数大于鱼的数量
         linkedPaths = tf.matchAll(tracks)
 
         # Update ids in old csv file according to linked paths
         linkedCsv = updateIds(oldCsv,linkedPaths)
-    elif len(tracks) == tf.n_fish:
+    elif len(tracks) == tf.n_fish:    # 轨迹数等于鱼的数量
         print("There are exactly {} 3D tracklets. These are saved as the final 3D tracks".format(tf.n_fish))
         linkedCsv = oldCsv
-    else:
+    else:    #轨迹数小于鱼的数量
         print("Only {} 3D tracklets are present, while there are {} fish. Not enough informaiton to work with".format(len(tracks), tf.n_fish))
         sys.exit()
 
-    # Remove duplicate frame detections in a track
-    linkedCsv.reset_index(inplace=True, drop=True)
+    # Remove duplicate frame detections in a track    移除重复帧
+    linkedCsv.reset_index(inplace=True, drop=True)    # 重置索引 且原地工作（对原数据生效） 丢弃原索引值
     linkedCsv = linkedCsv.drop(getDropIndecies(linkedCsv))
     
     outputPath = os.path.join(dataPath, 'processed', 'tracks_3d.csv')
     print("Saving data to: {0}".format(outputPath))
-    linkedCsv.to_csv(outputPath, index=False)
+    linkedCsv.to_csv(outputPath, index=False)    # index = 行索引  header = 列名
 
-    # Interpolate missing detections in linked csv file
+    # Interpolate missing detections in linked csv file    插值
     interpolated = interpolate(linkedCsv, dataPath)    
-    interpolated.reset_index(inplace=True, drop=True)
+    interpolated.reset_index(inplace=True, drop=True)    # 重置索引 且原地工作（对原数据生效） 丢弃原索引值
 
     # Save processed CSV file
-    interpolated = interpolated.sort_values(by=['id', 'frame'], ascending=[True,True])
+    interpolated = interpolated.sort_values(by=['id', 'frame'], ascending=[True,True])    # 用 frame和 id重新排序
 
     
     outputPath = os.path.join(dataPath, 'processed', 'tracks_3d_interpolated.csv')
     print("Saving data to: {0}".format(outputPath))
-    interpolated.to_csv(outputPath, index=False)
+    interpolated.to_csv(outputPath, index=False)    # index = 行索引  header = 列名
