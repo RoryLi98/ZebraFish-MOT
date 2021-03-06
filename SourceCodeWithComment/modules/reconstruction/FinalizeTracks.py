@@ -78,17 +78,17 @@ class TrackFinalizer:    # 插值
         self.maxIntersectionRatio = c.getfloat("max_intersection_ratio")
 
         if self.maxTemporalDiff == -1:
-            self.maxTemporalDiff = np.inf
+            self.maxTemporalDiff = np.inf    # 无穷
         if self.maxSpatialDiff == -1:
-            self.maxSpatialDiff = np.inf
+            self.maxSpatialDiff = np.inf    # 无穷
         if self.maxIntersectingFrames == -1:
-            self.maxIntersectingFrames = np.inf
+            self.maxIntersectingFrames = np.inf    # 无穷
         if self.maxIntersectionRatio == -1:
-            self.maxIntersectionRatio = np.inf
+            self.maxIntersectionRatio = np.inf    # 无穷
 
 
     ### Calculate distances
-    def getTemporalShift(self, mainTrack, galleryTrack):
+    def getTemporalShift(self, mainTrack, galleryTrack):    # 计算主轨迹和备选区轨迹的时间距离 如果交叠返回-1
         '''
         Calculates the temporal distance between the main and gallery track. If the tracks are overlapping, a distance of -1 is returned
         
@@ -120,7 +120,7 @@ class TrackFinalizer:    # 插值
             trackOrder: Indicator of the order of the tracks
 
         Output:
-            float: Euclidean distance between the two tracks
+            float: Euclidean distance between the two tracks    两轨迹的欧氏距离
         '''
 
         if trackOrder == 0:
@@ -141,7 +141,7 @@ class TrackFinalizer:    # 插值
 
     def getInternalDistances(self, mainTrack, galleryTrack):
         '''
-        Determines spatio-temporal distances when two tracks overlap (Using only the known 3D positions).
+        Determines spatio-temporal distances when two tracks overlap (Using only the known 3D positions).    确定两条轨道重叠时的时空距离
         This is done by constructing a graph, where each node is a detection in a frame, and the edge weights are the reciporal spatial distance between the adjacent nodes
         The path which minimizes the total travelled distance is then found.
         THe spatio-temporal distances are then based on the times where the graph switches between the tracks i.e. we base it on when we actually combine the tracks.
@@ -250,7 +250,7 @@ class TrackFinalizer:    # 插值
 
     def getDistances(self, galleryTrackID, mainTrackID):
         '''
-        Calculates all interesting distances between the provided gallery track and main track.
+        Calculates all interesting distances between the provided gallery track and main track.    计算所有距离
 
         Input:
             galleryTrackID: ID of the gallery track
@@ -258,9 +258,9 @@ class TrackFinalizer:    # 插值
 
         
         Output:
-            temporalShift: Temporal distance between tracks
-            spatialDiff: Spatial distance between tracks
-            intersecting_frames: Amount of time there is a detection at the same frame in both tracks
+            temporalShift: Temporal distance between tracks    时间距离
+            spatialDiff: Spatial distance between tracks    空间距离
+            intersecting_frames: Amount of time there is a detection at the same frame in both tracks    
             intersection_ratio: intersecting_frames as a ratio of the length of the gallery track
             internalTemporalDist: Mean temporal distance when combining two overlapping tracks
             internalSpatialDist: Mean spatial distance when combining two overlapping tracks
