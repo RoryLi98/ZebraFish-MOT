@@ -201,7 +201,7 @@ class TrackletMatcher:    # 2D -> 3D
             err,pos3d,cam1reproj,cam2reproj,cam2Pt = self.calcReprojError(f,track1,track2)
             track3d.reproj.append(err)
 
-            ## Get the weight as the inverted CDF value.
+            ## Get the weight as the inverted CDF value.    逆累积分布函数
             err = 1-scipy.stats.expon.cdf(err, scale=self.reprojMeanErr)
             
             if(self.withinAquarium(*pos3d)):
@@ -234,15 +234,15 @@ class TrackletMatcher:    # 2D -> 3D
         This is done using a Triangulate object.
         
         Input:
-            frameNumber: Index of the frame to be analyzed
-            track1: Track obejct containing the first tracklet
-            track2: Track object containing the second tracklet
+            frameNumber: Index of the frame to be analyzed    用来计算重投影误差的帧号
+            track1: Track obejct containing the first tracklet    轨迹一
+            track2: Track object containing the second tracklet    轨迹二
             
         Output:
-            err: Reprojection error (Euclidean distance) between the actual points of the tracks, and the reprojected points
-            p: 3D position of the 3D tracklet 
-            p1: 2D point of p reprojected onto camera view 1
-            p2: 2D point of p reprojected onto camera view 2
+            err: Reprojection error (Euclidean distance) between the actual points of the tracks, and the reprojected points    用欧氏距离作为重投影误差
+            p: 3D position of the 3D tracklet      轨迹中的3D坐标点
+            p1: 2D point of p reprojected onto camera view 1    重投影得到的3D坐标点在视角1的2D坐标
+            p2: 2D point of p reprojected onto camera view 2    重投影得到的3D坐标点在视角2的2D坐标
         """
         minErr = np.inf
         minP = None
@@ -292,8 +292,8 @@ class TrackletMatcher:    # 2D -> 3D
 
     def createNodes(self, verbose=False):
         """
-        Populates the internal graph with nodes, where each node is a 3D tracklet with the weight from calcMatchWeight
-        Only 2D tracklets which are concurrent are analyzed.
+        Populates the internal graph with nodes, where each node is a 3D tracklet with the weight from calcMatchWeight    用节点填充图，每个节点都是带有权重的轨迹点
+        Only 2D tracklets which are concurrent are analyzed.    只有两个视角都有轨迹的帧才会被添加
         
         Also stores all the 3D tracklets in a internal triagnualted structure
         
@@ -468,6 +468,7 @@ def combine2DTracklets(df, tm):
                         minPt = pt
                 
                 # If the calculated point is within the aquairum, add it to the df, else do nothing
+
                 if tm.withinAquarium(*minP):
                     row_max["3d_x"] = minP[0]
                     row_max["3d_y"] = minP[1]
@@ -533,41 +534,41 @@ if __name__ == '__main__':
                 'frame':track3d.frame,
                 'id':[mergedCount]*len(track3d.frame),
                 'err':track3d.errors,
-                '3d_x':[q[0] for q in track3d.positions3d],
+                '3d_x':[q[0] for q in track3d.positions3d],    # 轨迹上3D点的坐标
                 '3d_y':[q[1] for q in track3d.positions3d],
                 '3d_z':[q[2] for q in track3d.positions3d],
-                'cam1_x':[q[0] for q in track3d.cam1positions],
+                'cam1_x':[q[0] for q in track3d.cam1positions],    # 轨迹上3D点的坐标在视角1的2D坐标
                 'cam1_y':[q[1] for q in track3d.cam1positions],
-                'cam2_x':[q[0] for q in track3d.cam2positions],
+                'cam2_x':[q[0] for q in track3d.cam2positions],    # 轨迹上3D点的坐标在视角2的2D坐标
                 'cam2_y':[q[1] for q in track3d.cam2positions],
-                'cam1_proj_x':[q[0] for q in track3d.cam1reprojections],
+                'cam1_proj_x':[q[0] for q in track3d.cam1reprojections],    # 根据3D点重投影到视角1的2D坐标
                 'cam1_proj_y':[q[1] for q in track3d.cam1reprojections],
-                'cam2_proj_x':[q[0] for q in track3d.cam2reprojections],
+                'cam2_proj_x':[q[0] for q in track3d.cam2reprojections],    # 根据3D点重投影到视角2的2D坐标
                 'cam2_proj_y':[q[1] for q in track3d.cam2reprojections],
-                'cam1_tl_x': [q[0] for q in track3d.cam1bbox],
+                'cam1_tl_x': [q[0] for q in track3d.cam1bbox],    # 视角1 旋转矩形的左上角坐标点
                 'cam1_tl_y': [q[1] for q in track3d.cam1bbox],
-                'cam1_c_x': [q[2] for q in track3d.cam1bbox],
+                'cam1_c_x': [q[2] for q in track3d.cam1bbox],    # 视角1 源矩形的中心坐标点
                 'cam1_c_y': [q[3] for q in track3d.cam1bbox],
-                'cam1_w': [q[4] for q in track3d.cam1bbox],
-                'cam1_h': [q[5] for q in track3d.cam1bbox],
-                'cam1_theta': [q[6] for q in track3d.cam1bbox],
-                'cam1_aa_tl_x': [q[7] for q in track3d.cam1bbox],
+                'cam1_w': [q[4] for q in track3d.cam1bbox],    # 视角1 旋转矩形的宽
+                'cam1_h': [q[5] for q in track3d.cam1bbox],    # 视角1 旋转矩形的高
+                'cam1_theta': [q[6] for q in track3d.cam1bbox],    # 视角1 旋转矩形的旋转角度
+                'cam1_aa_tl_x': [q[7] for q in track3d.cam1bbox],    # 视角1 Bbox矩形左上角的坐标
                 'cam1_aa_tl_y': [q[8] for q in track3d.cam1bbox],
-                'cam1_aa_w': [q[9] for q in track3d.cam1bbox],
-                'cam1_aa_h': [q[10] for q in track3d.cam1bbox],
-                'cam1_frame': track3d.cam1frame,
-                'cam2_tl_x': [q[0] for q in track3d.cam2bbox],
+                'cam1_aa_w': [q[9] for q in track3d.cam1bbox],    # 视角1 Bbox矩形的宽
+                'cam1_aa_h': [q[10] for q in track3d.cam1bbox],    # 视角1 Bbox矩形的高
+                'cam1_frame': track3d.cam1frame,    # 视角1的帧号
+                'cam2_tl_x': [q[0] for q in track3d.cam2bbox],    # 视角2 旋转矩形的左上角坐标点
                 'cam2_tl_y': [q[1] for q in track3d.cam2bbox],
-                'cam2_c_x': [q[2] for q in track3d.cam2bbox],
+                'cam2_c_x': [q[2] for q in track3d.cam2bbox],    # 视角2 源矩形的中心坐标点
                 'cam2_c_y': [q[3] for q in track3d.cam2bbox],
-                'cam2_w': [q[4] for q in track3d.cam2bbox],
-                'cam2_h': [q[5] for q in track3d.cam2bbox],
-                'cam2_theta': [q[6] for q in track3d.cam2bbox],
-                'cam2_aa_tl_x': [q[7] for q in track3d.cam2bbox],
+                'cam2_w': [q[4] for q in track3d.cam2bbox],    # 视角2 旋转矩形的宽
+                'cam2_h': [q[5] for q in track3d.cam2bbox],    # 视角2 旋转矩形的高
+                'cam2_theta': [q[6] for q in track3d.cam2bbox],    # 视角2 旋转矩形的旋转角度
+                'cam2_aa_tl_x': [q[7] for q in track3d.cam2bbox],    # 视角2 Bbox矩形左上角的坐标
                 'cam2_aa_tl_y': [q[8] for q in track3d.cam2bbox],
-                'cam2_aa_w': [q[9] for q in track3d.cam2bbox],
-                'cam2_aa_h': [q[10] for q in track3d.cam2bbox],
-                'cam2_frame': track3d.cam2frame})
+                'cam2_aa_w': [q[9] for q in track3d.cam2bbox],    # 视角2 Bbox矩形的宽
+                'cam2_aa_h': [q[10] for q in track3d.cam2bbox],    # 视角2 Bbox矩形的高
+                'cam2_frame': track3d.cam2frame})    # 视角2的帧号
     
             # Save information from parent tracks which are
             # not already present in the saved 3D track

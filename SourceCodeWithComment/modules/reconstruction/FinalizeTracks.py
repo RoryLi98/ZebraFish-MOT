@@ -16,7 +16,7 @@ from common.utility import prepareCams, csv2Tracks, readConfig, getTrackletFeatu
 from common.Track import Track
 from modules.reconstruction.Triangulate import Triangulate
 
-class TrackFinalizer:
+class TrackFinalizer:    # 插值
     """
     Class implementation for associating 3D tracklets and create full 3D tracks     
     
@@ -54,10 +54,10 @@ class TrackFinalizer:
         config = readConfig(path)        
         
         c = config['DEFAULT']
-        # Get number of fish
+        # Get number of fish    鱼的数量
         self.n_fish = c.getint("n_fish")
         
-        # Random number generator seed
+        # Random number generator seed    随机生成的种子
         self.seed = c.getint("seed", None)
         np.random.seed(self.seed)            
 

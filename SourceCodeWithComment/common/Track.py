@@ -53,7 +53,7 @@ class Track:
         self.patch = None
 
 
-    def getImagePos(self, frameNumber, pt = "kpt", useCamFrame = False):
+    def getImagePos(self, frameNumber, pt = "kpt", useCamFrame = False):    # 得到某帧的2D图像坐标系的坐标 若有多个即返回第一个元组
         """
         Gets the 2D image coordinates at a specific frame
         If there are several positions at the specified frame, the first instance is returend
