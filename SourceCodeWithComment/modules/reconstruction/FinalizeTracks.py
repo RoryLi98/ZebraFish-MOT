@@ -161,21 +161,21 @@ class TrackFinalizer:    # 插值
         gtStart = galleryTrack.frame[0]
         gtEnd = galleryTrack.frame[-1]
 
-        start = max(mtStart, gtStart)    # 取交集
-        end = min(mtEnd, gtEnd)
+        start = max(mtStart, gtStart)    # 交集起点
+        end = min(mtEnd, gtEnd)          # 交集终点
 
         frames = list(np.linspace(start, end, end-start+1, dtype=np.int))    # 做等差数组 即交集的每帧
 
         ## Add the detections just before/after the intersection, if there are any
         for track in [mainTrack, galleryTrack]:
-            if start > track.frame[0]:
-                vals = start - track.frame
-                vals[vals <= 0] = np.max(vals)+1 
-                frames.append(track.frame[np.argmin(vals)])
-            if end < track.frame[-1]:
-                vals = track.frame - end
-                vals[vals <= 0] = np.max(vals)+1 
-                frames.append(track.frame[np.argmin(vals)])
+            if start > track.frame[0]:    # 交集起点大于该轨迹的起点时
+                vals = start - track.frame    # 取该轨迹全部帧号至交集起点的距离
+                vals[vals <= 0] = np.max(vals)+1     # 小于等于0的距离 赋值为 该轨迹起点至交集起点的距离+1
+                frames.append(track.frame[np.argmin(vals)])    # 取该轨迹在交集起点的临界前帧号
+            if end < track.frame[-1]:     # 交集终点大于该轨迹的终点时
+                vals = track.frame - end    # 取该轨迹全部帧号到
+                vals[vals <= 0] = np.max(vals)+1     # 小于等于0的距离 赋值为 该轨迹起点至交集起点的距离+1
+                frames.append(track.frame[np.argmin(vals)])    # 取该轨迹在交集终点的临界后帧号
 
         ## Create a dataframe containing all the relevant detections
         track_id = "{}-{}".format(mainTrack.id, galleryTrack.id)
@@ -183,7 +183,7 @@ class TrackFinalizer:    # 插值
         for frame in frames:
             for track in [mainTrack, galleryTrack]:
                 if frame in track.frame:
-                    index = track.frame == frame
+                    index = track.frame == frame    # 不懂
                     
                     # print(index)
                     # print(track.id)
@@ -200,9 +200,9 @@ class TrackFinalizer:    # 插值
                         "source": track.id})
                     df_total = df_total.append(df)
 
-        df_total.reset_index(inplace=True, drop=True)
+        df_total.reset_index(inplace=True, drop=True)    #原地工作，丢弃原索引
 
-        multi_idx = np.linspace(0, len(df_total)-1, len(df_total), dtype=np.int)
+        multi_idx = np.linspace(0, len(df_total)-1, len(df_total), dtype=np.int)    # 生成等差数列 长度为len(df_total) 0 ~ len(df_total)-1
 
         # Get the indecies needed for the graph, their corresponding frames and 3D positions
         multi_idx, frames, coords = getTrackletFeatures(multi_idx, df_total)

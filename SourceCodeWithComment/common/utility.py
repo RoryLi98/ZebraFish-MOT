@@ -304,7 +304,7 @@ def checkFileName(fn):
     return fn_
   
         
-def frameConsistencyGraph(indecies, frames, coord, verbose = False):
+def frameConsistencyGraph(indecies, frames, coord, verbose = False):    # 创建一个有向无环图 
     '''
     Constructs a Directed Acyclic Graph, where each node represents an index.
     Each node is connected to the possible nodes corresponding to detections in the previous and next frames
@@ -312,9 +312,9 @@ def frameConsistencyGraph(indecies, frames, coord, verbose = False):
     '''
     graph = nx.DiGraph()
 
-    list_indecies = np.asarray([x for x in range(len(indecies))])
+    list_indecies = np.asarray([x for x in range(len(indecies))])    # ndarray 0 ~ len(indecies)-1
     
-    # convert lists to numpy arrays
+    # convert lists to numpy arrays    # List -> numpy array
     if type(indecies) == list:
         indecies = np.asarray(indecies)
     if type(frames) == list:
@@ -323,21 +323,21 @@ def frameConsistencyGraph(indecies, frames, coord, verbose = False):
         coord = np.asarray(coord)
     
     # sort in ascending order
-    sort_order = np.argsort(frames)
+    sort_order = np.argsort(frames)    #以frame排序
 
     indecies = indecies[sort_order]
     frames = frames[sort_order]
     coord = coord[sort_order]
 
-    # Create a dict where the key is the frame and the element is a numpy array with the relevant indecies for the frame    
+    # Create a dict where the key is the frame and the element is a numpy array with the relevant indecies for the frame    Dict的键为：frame 值为：相关的帧索引
     fDict = {}
     for f in frames:
-        fDict[f] = indecies[frames == f]
+        fDict[f] = indecies[frames == f]    # 利用bool值进行索引
     
     # Go through each element in the dict
     prevNodes = []
     zeroCounter = 0
-    for idx, key in enumerate(fDict):
+    for idx, key in enumerate(fDict):    # key为各个键
         # Get the indecies for the frame (key)
         occurences = fDict[key]
     
@@ -345,40 +345,40 @@ def frameConsistencyGraph(indecies, frames, coord, verbose = False):
         currentNodes = []
         for occ in occurences:
             cNode = occ
-            cIdx = list_indecies[indecies == occ] # get the index needed to look up coordinates
+            cIdx = list_indecies[indecies == occ] # get the index needed to look up coordinates    获取查找坐标所需的索引   利用bool值进行索引
             currentNodes.append((occ, cIdx))
                 
-            # If there are already soem nodes in the graph
+            # If there are already some nodes in the graph    #若图中已经有结点
             if prevNodes is not None:
 
                 # for each of the previous nodes calculate the reciprocal euclidean distance to the current node, and use as the edge weight between the nodes
                 for tpl in prevNodes:
                     pNode, pIdx = tpl
                     
-                    dist = np.linalg.norm(coord[pIdx][0] - coord[cIdx][0])
+                    dist = np.linalg.norm(coord[pIdx][0] - coord[cIdx][0])    # 求当前点与某旧点的欧氏距离  不懂为什么要加[0]
                     if(dist == 0):
                         if verbose:
                             print("0 distance between frame {} and {} - sorted indexes: {} and {}".format(frames[pIdx], frames[cIdx], pIdx, cIdx))
-                        zeroCounter += 1
-                        weight = 1
+                        zeroCounter += 1    # 零计数量
+                        weight = 1    # 权重设为1
                     else:
-                        weight = 1/dist
-                    graph.add_edge(pNode, cNode, weight = weight)
+                        weight = 1/dist    # 权重设为 欧氏距离的倒数
+                    graph.add_edge(pNode, cNode, weight = weight)     # 添加 pNode -> cNode 有权值的边
                     
                     if verbose:
                         print("edge: {} - {} Weight: {}  Distance {}  -  previous 3D {} - current 3D {}".format(pNode, cNode, weight, dist, coord[pIdx], coord[cIdx]))
         
-        prevNodes = currentNodes
+        prevNodes = currentNodes    # 当前点变成旧点
     if zeroCounter and verbose:
         print("{} instances of 0 distance".format(zeroCounter))
         
-    path = nx.dag_longest_path(graph)
-    length = nx.dag_longest_path_length(graph) 
+    path = nx.dag_longest_path(graph)      # 得到最长路径
+    length = nx.dag_longest_path_length(graph)    # 得到最长路径的长度
     spatialDist = []
     temporalDist = []
     for idx in range(1, len(path)):
-        pIdx = list_indecies[indecies == path[idx-1]]
-        cIdx = list_indecies[indecies == path[idx]]
+        pIdx = list_indecies[indecies == path[idx-1]]    # 利用bool值进行索引
+        cIdx = list_indecies[indecies == path[idx]]      # 利用bool值进行索引
         spatialDist.append(np.linalg.norm(coord[pIdx][0] - coord[cIdx][0]))
         temporalDist.append(frames[cIdx][0] - frames[pIdx][0])
     
@@ -407,32 +407,32 @@ def getTrackletFeatures(multi_idx, df):
     frames = []
     coords = []
 
-    # Restructure list so we only keep unique values, in an ordered list
+    # Restructure list so we only keep unique values, in an ordered list    # 重构列表
     multi_idx = sorted(list(set(multi_idx)))
     
-    first = multi_idx[0]
-    last = multi_idx[-1]
+    first = multi_idx[0]    # 索引起点
+    last = multi_idx[-1]    # 索引终点
     
-    # Go through each idx, get the frame number and the 3D position
+    # Go through each idx, get the frame number and the 3D position    # 遍历索引，得到帧号和3D坐标
     for index in multi_idx:
         row = df.iloc[index]
         
-        frames.append(int(row["frame"]))
-        coords.append(np.asarray([row["3d_x"], row["3d_y"], row["3d_z"]]))
+        frames.append(int(row["frame"]))    # 添加帧号
+        coords.append(np.asarray([row["3d_x"], row["3d_y"], row["3d_z"]]))    # 添加 3D坐标点
 
-    # Check the index before and after the ones in the current list, if they exists, and if it belongs to the same tracklet
+    # Check the index before and after the ones in the current list, if they exists, and if it belongs to the same tracklet    # 检查 multi_idx前后一位的索引
     for idx in [first-1, last+1]:
         if idx > 0 and idx < len(df)-1:
             initRow = df.iloc[idx]
 
-            if initRow["id"] == df.iloc[multi_idx[0]]["id"]:
+            if initRow["id"] == df.iloc[multi_idx[0]]["id"]:    # 若ID相同，multi_idx增长
                 pos = np.asarray([initRow["3d_x"], initRow["3d_y"], initRow["3d_z"]])
 
-                # Check whether the index has a valid 3D position
-                if not np.allclose(pos, np.ones(3)*-1):        
+                # Check whether the index has a valid 3D position    是否有效 -1，-1，-1即无效
+                if not np.allclose(pos, np.ones(3)*-1):        # 与([-1., -1., -1.])相比 1e-05的误差
                     multi_idx.append(idx)
-                    frames.append(int(initRow.frame))
-                    coords.append(pos)
+                    frames.append(int(initRow.frame))    # 有效即添加
+                    coords.append(pos)      # 有效即添加
     
     return multi_idx, frames, coords
 
@@ -557,9 +557,9 @@ def extractRoi(frame, pos, dia):
     Extracts a region of interest with size dia x dia in the provided frame, at the specied position
     
     Input:
-        frame: Numpy array containing the frame
-        pos: 2D position of center of ROI
-        dia: Integer used as width and height of the ROI
+        frame: Numpy array containing the frame            
+        pos: 2D position of center of ROI                  ROI的中心坐标点
+        dia: Integer used as width and height of the ROI   宽和高
         
     Output:
         patch: Numpy array containing hte extracted ROI
