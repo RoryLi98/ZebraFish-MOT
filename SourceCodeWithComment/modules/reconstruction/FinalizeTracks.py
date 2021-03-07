@@ -1044,7 +1044,7 @@ def interpolate(df, dataPath):    # 线性插值
     # Prepare 'interpolated' column    创建新列 'interpolated'
     df['interpolated'] = [0]*len(df)
 
-    # Prepare dummy row
+    # Prepare dummy row    辅助插值
     dummyRow = df.iloc[0].copy()    # 取第0行数据 并初始化 iloc通过行号获取行数据
     dummyRow['3d_x'] = -1
     dummyRow['3d_y'] = -1
@@ -1053,13 +1053,13 @@ def interpolate(df, dataPath):    # 线性插值
     
     dummyRow['cam1_proj_x'] = -1    # 待更新对象
     dummyRow['cam1_proj_y'] = -1    # 待更新对象
-    dummyRow['cam1_x'] = None
-    dummyRow['cam1_y'] = None
+    dummyRow['cam1_x'] = None       # None = NaN
+    dummyRow['cam1_y'] = None       # None = NaN
 
     dummyRow['cam2_proj_x'] = -1    # 待更新对象
     dummyRow['cam2_proj_y'] = -1    # 待更新对象
-    dummyRow['cam2_x'] = None
-    dummyRow['cam2_y'] = None
+    dummyRow['cam2_x'] = None       # None = NaN
+    dummyRow['cam2_y'] = None       # None = NaN    除了以上元素其他元素不是重点
 
     # Interpolate 2D detections
     interpolated = pd.DataFrame()
@@ -1087,7 +1087,7 @@ def interpolate(df, dataPath):    # 线性插值
                 currTrack[columnHeader] = tmp.interpolate(method="linear", limit_direction = "both", axis=0)    # 沿着 index轴进行双向线性插值
         interpolated = interpolated.append(currTrack,sort=False)    #添加入插值后的数据，先不排序
 
-    # Remove rows with NaN values    移除带有NaN值的行，即剔除补的dummy帧
+    # Remove rows with NaN values    移除带有NaN值的行
     interpolated = interpolated[np.isfinite(interpolated['cam1_x'])]
     interpolated = interpolated[np.isfinite(interpolated['cam2_x'])]
 
@@ -1129,7 +1129,7 @@ def interpolate(df, dataPath):    # 线性插值
         newRows = newRows.append(currRow,sort=False)
 
     interpolated = interpolated[interpolated['err'] != -1]
-    interpolated = interpolated.append(newRows,sort=False)
+    interpolated = interpolated.append(newRows,sort=False)    # 合并 为排序
     return interpolated
 
 
