@@ -139,7 +139,7 @@ class TrackFinalizer:    # 插值
         return np.linalg.norm(gt3D - mt3D)    # 求二范数 即空间欧式距离
 
 
-    def getInternalDistances(self, mainTrack, galleryTrack):
+    def getInternalDistances(self, mainTrack, galleryTrack):    # 不懂
         '''
         Determines spatio-temporal distances when two tracks overlap (Using only the known 3D positions).    当轨迹交叠时，确定两条轨道重叠时的时空距离
         This is done by constructing a graph, where each node is a detection in a frame, and the edge weights are the reciprocal spatial distance between the adjacent nodes
@@ -151,7 +151,7 @@ class TrackFinalizer:    # 插值
             galleryTrack: Track object of the gallery track
 
         Output:
-            nSpatialDist: List of spatial distances from the found graph, at the points where the graph jumps between tracks
+            nSpatialDist: List of spatial distances from the found graph, at the points where the graph jumps between tracks    
             nTemporalDist: List of temporal distances from the found graph, at the points where the graph jumps between tracks
             validIndecies: Dict contianing the indecies per track, which should be kept after solving the graph
         '''
@@ -183,7 +183,7 @@ class TrackFinalizer:    # 插值
         for frame in frames:
             for track in [mainTrack, galleryTrack]:
                 if frame in track.frame:
-                    index = track.frame == frame    # 不懂
+                    index = track.frame == frame    # 选出等于 frame的行号
                     
                     # print(index)
                     # print(track.id)
@@ -204,41 +204,41 @@ class TrackFinalizer:    # 插值
 
         multi_idx = np.linspace(0, len(df_total)-1, len(df_total), dtype=np.int)    # 生成等差数列 长度为len(df_total) 0 ~ len(df_total)-1
 
-        # Get the indecies needed for the graph, their corresponding frames and 3D positions
+        # Get the indecies needed for the graph, their corresponding frames and 3D positions    得到某行号的帧号与相关帧号和其3D坐标
         multi_idx, frames, coords = getTrackletFeatures(multi_idx, df_total)
         
-        # Create graph and get and keep the indecies which minimizes the distance between the possible nodes
-        path_idx, _, spatialDist, temporalDist = frameConsistencyGraph(multi_idx,frames,coords,False)
+        # Create graph and get and keep the indecies which minimizes the distance between the possible nodes    建有向无环图，欧氏距离为权重，找寻最长路径
+        path_idx, _, spatialDist, temporalDist = frameConsistencyGraph(multi_idx,frames,coords,False)    # path_idx存储路径
 
-        # Find the indecies which from each track which should be kept when combined
+        # Find the indecies which from each track which should be kept when combined    查找 合并的轨迹 应该保留的索引  字典格式
         validIndecies = {}
         for track in [mainTrack, galleryTrack]:
-            start_frames = list(track.frame[track.frame < start])
-            end_frames = list(track.frame[track.frame > end])
+            start_frames = list(track.frame[track.frame < start])    # 小于 start 帧号
+            end_frames = list(track.frame[track.frame > end])        # 大于 end 帧号
 
             graph_idx = []
             for idx in path_idx:
-                row = df_total.iloc[idx]
-                if row["source"] == track.id:
-                    graph_idx.append(row["frame"])  
+                row = df_total.iloc[idx]    # 行号索引
+                if row["source"] == track.id:    # source == track.id
+                    graph_idx.append(row["frame"])    # 记录帧号
             
             fullList = []
             for lst in [start_frames, end_frames, graph_idx]:
                 fullList.extend(lst)
-            fullList = sorted(list(set(fullList)))
-            validIndecies[track.id] = [True if x in fullList else False for x in track.frame]
+            fullList = sorted(list(set(fullList)))    # 对原列表去重并按从小到大排序。
+            validIndecies[track.id] = [True if x in fullList else False for x in track.frame]    # [True, True, False, True, False, False, True, True, False]
 
-        # Only use the distances for when swapping between the two tracks
+        # Only use the distances for when swapping between the two tracks    在两条轨迹切换时仅使用距离
         nSpatialDist = []
         nTemporalDist = []
 
         for idx in range(1, len(path_idx)):
-            prevRow = df_total.iloc[path_idx[idx-1]]
-            curRow = df_total.iloc[path_idx[idx]]
+            prevRow = df_total.iloc[path_idx[idx-1]]    # 前一行
+            curRow = df_total.iloc[path_idx[idx]]       # 后一行
 
-            if prevRow["source"] != curRow["source"]:
-                nSpatialDist.append(spatialDist[idx-1])
-                nTemporalDist.append(temporalDist[idx-1])
+            if prevRow["source"] != curRow["source"]:    # 若源不等相同
+                nSpatialDist.append(spatialDist[idx-1])    # 添加空间距离
+                nTemporalDist.append(temporalDist[idx-1])    # 添加时间距离
 
         if len(nSpatialDist) == 0:
             nSpatialDist.append(0)
@@ -260,13 +260,13 @@ class TrackFinalizer:    # 插值
         Output:
             temporalShift: Temporal distance between tracks    时间距离
             spatialDiff: Spatial distance between tracks    空间距离
-            intersecting_frames: Amount of time there is a detection at the same frame in both tracks    
-            intersection_ratio: intersecting_frames as a ratio of the length of the gallery track
-            internalTemporalDist: Mean temporal distance when combining two overlapping tracks
-            internalSpatialDist: Mean spatial distance when combining two overlapping tracks
+            intersecting_frames: Amount of time there is a detection at the same frame in both tracks    交叠的帧号
+            intersection_ratio: intersecting_frames as a ratio of the length of the gallery track    交叠率
+            internalTemporalDist: Mean temporal distance when combining two overlapping tracks    
+            internalSpatialDist: Mean spatial distance when combining two overlapping tracks    
             trackIndecies: Dict of indecies, idnicating which detections from each track should be used, in case of overlapping tracks
             trackOrder: Temporal order of tracks
-            validTrack: Whether the track is valid i.e. whether all values are within user defiend thresholds
+            validTrack: Whether the track is valid i.e. whether all values are within user defiend thresholds    是否为有效的轨迹 是否在用户设置的阈值之间
         '''
 
         mt = self.mainTracks[mainTrackID]            
@@ -277,29 +277,29 @@ class TrackFinalizer:    # 插值
         spatialDiff = self.getSpaitalDistance(mt, gt, trackOrder)    # 空间距离  根据谁先谁后，算空间距离
         
         # Get detection overlap between main and gallerytrack, as count and ratio of full gallery track length
-        intersecting_frames = len(np.intersect1d(mt.frame, gt.frame))    # 求交叠的帧号
+        intersecting_frames = len(np.intersect1d(mt.frame, gt.frame))    # 求交叠的帧数
         intersection_ratio = intersecting_frames/len(gt.frame)    # 求交叠率 分母：gallery track的帧数
 
         # If tracks are overlapping, get internal spatio-temporal distances. Else set to invalid values    若轨迹有交叠
-        if temporalShift == -1:
-            internalSpatialDistM, internalTemporalDistM, trackIndecies = self.getInternalDistances(mt, gt)
-            internalSpatialDist = np.mean(internalSpatialDistM)
-            internalTemporalDist = np.mean(internalTemporalDistM)
-        else:
+        if temporalShift == -1:    # 有交叠
+            internalSpatialDistM, internalTemporalDistM, trackIndecies = self.getInternalDistances(mt, gt) # trackIndecies = 字典 id：[True, True, False, True, False, False, True, True, False]
+            internalSpatialDist = np.mean(internalSpatialDistM)    # 平均 空间误差
+            internalTemporalDist = np.mean(internalTemporalDistM)    # 平均 时间误差
+        else:    # 无交叠
             internalSpatialDist = -1
             internalTemporalDist = -1
             trackIndecies = {mt.id: [True]*len(mt.frame),
-                            gt.id: [True]*len(gt.frame)}
+                            gt.id: [True]*len(gt.frame)}    # trackIndecies = 字典 id：[True, True, False, True, False, False, True, True, False]
         
         
-        # Check if any of the derived values are outside of the user defiend thresholds
+        # Check if any of the derived values are outside of the user defiend thresholds    # 是否在用户设置的阈值之间     时间距离 空间距离 交叠的帧数 交叠率
         if temporalShift <= self.maxTemporalDiff and spatialDiff <= self.maxSpatialDiff and intersecting_frames <= self.maxIntersectingFrames and intersection_ratio <= self.maxIntersectionRatio:
-            validTrack = True
+            validTrack = True    # 有效
         else:
-            validTrack = False
+            validTrack = False    # 无效
         
         return temporalShift, spatialDiff, intersecting_frames, intersection_ratio, internalTemporalDist, internalSpatialDist, trackIndecies, trackOrder, validTrack
-          
+        #       
 
 
     ### Cost based assignment approach
@@ -308,7 +308,7 @@ class TrackFinalizer:    # 插值
         Takes a matrix, and normalizes values into a range of [0;1], where all values sum to 1, i.e. into cost/probability values.
 
         Input:
-            m: Matrix containing values
+            m: Matrix containing values    矩阵归一化至 和为1
 
         Output:
             m_prob: matrix containing cost values
@@ -317,7 +317,7 @@ class TrackFinalizer:    # 插值
         return m / np.sum(m, 0)
 
 
-    def getCosts(self, metric_dict):   
+    def getCosts(self, metric_dict):   # 遍历字典的每个值（矩阵） 剔除负值置为无穷 并把他们的和归一化为1 
         '''
         Takes a metric dictionary, and converts the values into cost values (through the use of the calcCost function).
 
@@ -329,19 +329,19 @@ class TrackFinalizer:    # 插值
         '''
 
         res = {}
-        for key in metric_dict:
-            # Find all valid values in the current metric (invalid values have negative values)
+        for key in metric_dict:    # 遍历键
+            # Find all valid values in the current metric (invalid values have negative values)    找到有效的值，负值为无效的值，需要剔除掉
             m = metric_dict[key]
-            index = m >= 0
+            index = m >= 0     # 返回矩阵，元素为True
 
-            if sum(index) > 0 :
+            if sum(index) > 0 :    #计算 True的个数
                 m_prob = np.zeros_like(m)
                 m_prob[index] = self.calcCost(m[index])
-            else:
-                m_prob = np.ones(self.n_fish) * 1/self.n_fish
+            else:                  # 
+                m_prob = np.ones(self.n_fish) * 1/self.n_fish    # self.n_fish 维度 各值为 1/self.n_fish 
     
-            ## Set invalid values to infinite
-            m_prob[~index] = np.inf
+            ## Set invalid values to infinite    # 把其他值设为 无穷∞
+            m_prob[~index] = np.inf     
 
             res[key] = m_prob
         return res
@@ -349,20 +349,20 @@ class TrackFinalizer:    # 插值
 
     def getMetrics(self, tDistm, sDistm, iFramesm, iFramesRatiom, iTDistm, iSDistm, verbose = False):
         '''
-        Calcualtes all the relevant metrics and returns them in a dictionary.
+        Calcualtes all the relevant metrics and returns them in a dictionary.    计算所有相关的矩阵 并返回一个字典 
 
-        Re-Id values are always saved. If there are only a subset of main tracks that are overlapping, then these re-id values are excluded (by setting to -1)
-        If all main tracks are not overlapping, then the spatio-temporal distances are used.
+        Re-Id values are always saved. If there are only a subset of main tracks that are overlapping, then these re-id values are excluded (by setting to -1)    
+        If all main tracks are not overlapping, then the spatio-temporal distances are used.    如果全部轨迹都不交叠，则用时空距离
 
         If all tracks are overlapping, then the internal spatio-temporal distances, the amount of concurrent detections, and how large a % of the gallery track this is, is used.
 
         Input:
-            tDistm: distance matrix containing temporal distances
-            sDistm: distance matrix containing spatial distances
-            iFramesm: matrix containing amount of concurrent frames between gallery track and each main tracks
-            iFramesRatiom: matrix containing iFramesm values but as a ratio of gallery track length
-            iTDistm: distance matrix of the internal temporal distances
-            iSDistm: distance matrix ofhte internal spatial distances.
+            tDistm: distance matrix containing temporal distances    # 时间距离矩阵
+            sDistm: distance matrix containing spatial distances    # 空间距离矩阵
+            iFramesm: matrix containing amount of concurrent frames between gallery track and each main tracks    # 并发帧数矩阵 ？ 
+            iFramesRatiom: matrix containing iFramesm values but as a ratio of gallery track length    # 
+            iTDistm: distance matrix of the internal temporal distances     # 内部时间距离矩阵
+            iSDistm: distance matrix of the internal spatial distances.     # 内部空间距离矩阵
             verbose: Whether to print information
 
         Output:
@@ -377,18 +377,18 @@ class TrackFinalizer:    # 插值
         intersectionData = False
         intersectionRatioData = False
 
-        if sum(tDistm == -1) < len(tDistm): # Check if there are any valid temporal data
+        if sum(tDistm == -1) < len(tDistm): # Check if there are any valid temporal data    是否有有效的时间数据
             temporalData = True
             metric_dict["temporal"] = tDistm
-        if sum(sDistm == -1) < len(sDistm): # Check if there are any valid spatial data
+        if sum(sDistm == -1) < len(sDistm): # Check if there are any valid spatial data    是否有有效的空间数据
             spatialData = True
             metric_dict["spatial"] = sDistm
 
-        concurrentData = not temporalData and not spatialData
+        concurrentData = not temporalData and not spatialData    # 若时间数据和空间数据都没有时，concurrentData置为True
 
         if concurrentData:
             # Check if there are any frames where the gallery and any main track intesects
-            if sum(iFramesm <= 0) < len(iFramesm):
+            if sum(iFramesm <= 0) < len(iFramesm):    # iFramesm元素小于等于0的个数 小于 iFramesm的维度
                 internalSpatialData = internalTemporalData = intersectionData = True
                 metric_dict["intersection"] = iFramesm
                 metric_dict["internal_temporal"] = iTDistm

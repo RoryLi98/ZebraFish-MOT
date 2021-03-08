@@ -379,8 +379,8 @@ def frameConsistencyGraph(indecies, frames, coord, verbose = False):    # 创建
     for idx in range(1, len(path)):
         pIdx = list_indecies[indecies == path[idx-1]]    # 利用bool值进行索引
         cIdx = list_indecies[indecies == path[idx]]      # 利用bool值进行索引
-        spatialDist.append(np.linalg.norm(coord[pIdx][0] - coord[cIdx][0]))
-        temporalDist.append(frames[cIdx][0] - frames[pIdx][0])
+        spatialDist.append(np.linalg.norm(coord[pIdx][0] - coord[cIdx][0]))    # 不懂为什么要加[0]
+        temporalDist.append(frames[cIdx][0] - frames[pIdx][0])    # 不懂为什么要加[0]
     
     if verbose:
         print()
