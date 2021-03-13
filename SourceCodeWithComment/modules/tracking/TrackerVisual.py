@@ -122,7 +122,7 @@ class Tracker:
     
 
 
-    def pairwiseDistance(self, detections, tracks):
+    def pairwiseDistance(self, detections, tracks):    # 计算成对距离
         """
         Calculate pairwise distance between new detections and the old tracks.
         The matrix is of size: [s, s], where s = max(len(detections), len(tracks))*2.
@@ -137,22 +137,22 @@ class Tracker:
             pDist: Matrix of size [s,s], containing the pairwise distances
         """
         
-        maxLen = int(max(len(self.detections),len(self.tracks)))
+        maxLen = int(max(len(self.detections),len(self.tracks)))    # detections, tracks的最大值
 
-        # Init matrix (including ghost tracks)
+        # Init matrix (including ghost tracks)    初始化矩阵
         pDist = np.ones((maxLen,maxLen), np.float32)*self.ghostThreshold
 
         # Update matrix
         for detIndex in range(len(self.detections)):
             for trackIndex in range(len(self.tracks)):
-                pDist[detIndex][trackIndex] = self.distanceFunc(detIndex,trackIndex)
+                pDist[detIndex][trackIndex] = self.distanceFunc(detIndex,trackIndex)    # 计算距离 先检测目标 后轨迹
 
         return pDist
 
     
     def distanceFunc(self, detIndex, trackIndex):
         """
-        Calculates a cost values between the provided detection and track
+        Calculates a cost values between the provided detection and track    计算欧式距离
         
         The Euclidean distance is calculated, and turned into a norm by dividing with the max allwoed distance, from the config file.
         
@@ -167,11 +167,11 @@ class Tracker:
         
         # Distance cost
 
-        if self.cam == 1: 
+        if self.cam == 1:     # 顶视的话，用欧氏距离
             # L2 distance
             distCost = np.linalg.norm(self.tracks[trackIndex].pos[-1]-np.array(self.detections[detIndex].pt))
         elif self.cam == 2:  # Make sure the coordinates are in order x,y and not y,x (as the cov matrix will be incorrect then)
-            # Mahalanobis distance
+            # Mahalanobis distance  侧视的话，用马氏距离
             detPt = np.asarray(self.detections[detIndex].pt).reshape(1,2)
             trackPt = np.asarray(self.tracks[trackIndex].pos[-1]).reshape(1,2)
             mdist = self.mahalanobisDistance(detPt, trackPt, self.tracks[trackIndex].M)  # Square mahalanobis distances
@@ -224,21 +224,21 @@ class Tracker:
     def recognise(self, frameNumber, detections, bbox, verbose=False):
         """
         Update tracker with new measurements.
-        This is done by calculating a pairwise distance matrix and finding the optimal solution through the Hungarian algorithm.
+        This is done by calculating a pairwise distance matrix and finding the optimal solution through the Hungarian algorithm.    计算矩阵成对距离，并用最优化算法：匈牙利算法求解
         
         Input: 
-            frameNumber: The current frame number (Int)
-            detections: List of cv2.keyPoints (the detections) found in the current frame.
-            bbox: List of dicts containing bounding boxes associated with the detected keypoints. 
-            frame: The current frame as numpy array
-            labels: Grayscale image where each BLOB has pixel value equal to its label 
+            frameNumber: The current frame number (Int)    当前帧号
+            detections: List of cv2.keyPoints (the detections) found in the current frame.    当前帧中关键点
+            bbox: List of dicts containing bounding boxes associated with the detected keypoints.    关键点的bbox
+            frame: The current frame as numpy array    ？？？
+            labels: Grayscale image where each BLOB has pixel value equal to its label    灰度图 
             verbose: Whether to print information or not.
             
         Output:
             tracks: List of Track objects
         """
 
-        for idx in reversed(range(len(bbox))):
+        for idx in reversed(range(len(bbox))):    # 过滤置信度低于预设阈值的目标
             if bbox[idx]["confidence"] < self.minConfidence:
                 del bbox[idx]
                 del detections[idx]
@@ -246,8 +246,8 @@ class Tracker:
         self.detections = detections
 
         # Update tracking according to matches
-        numNew = len(self.detections)
-        numOld = len(self.tracks)
+        numNew = len(self.detections)    # 检测数
+        numOld = len(self.tracks)    # 轨迹数
         if(verbose):
             print("New detections: ", numNew)
             print("Existing tracks: ", numOld)
@@ -257,7 +257,7 @@ class Tracker:
                 print("ID {} - Kill Count {}".format(t.id, t.killCount))
             t.killCount += 1
         
-        # Construct cost matrix
+        # Construct cost matrix    计算代价矩阵
         costM = self.pairwiseDistance(detections, self.tracks)
 
 
@@ -266,7 +266,7 @@ class Tracker:
         
         killedTracks = []
         for (mRow, pCol) in matches:
-            ## If the assignment cost is below the Ghost threshold, then update the existing tracklet
+            ## If the assignment cost is below the Ghost threshold, then update the existing tracklet    如果配对代价低于鬼影阈值，则更新至已有轨迹
             if(costM[mRow][pCol] < self.ghostThreshold):
                 # Update existing track with measurement
                 p = np.array(detections[mRow].pt)
@@ -277,11 +277,11 @@ class Tracker:
                 self.tracks[pCol].frame.append(frameNumber)
                 self.tracks[pCol].killCount = 0
                 
-            ## If the cost assignment is higher than the ghost threshold, then either create a new track or kill an old one
+            ## If the cost assignment is higher than the ghost threshold, then either create a new track or kill an old one    高于鬼影阈值
             else:
-                # A new track is created if the following is true:
-                # 1) The cost (L2 distance) is higher than the ghost threshold
-                # 2) It is an actual detection (mRow < numNew)
+                # A new track is created if the following is true:    会新创建一条track的情况
+                # 1) The cost (L2 distance) is higher than the ghost threshold    欧氏距离大于鬼影阈值
+                # 2) It is an actual detection (mRow < numNew)   numNew = 检测数  检测的目标是真的
                 if(mRow < numNew):
                     # Create new track
                     newTrack = Track()
@@ -298,10 +298,10 @@ class Tracker:
                     if verbose:
                         print("Num tracks: {}".format(len(self.tracks)))
                 
-                # The track is deleted if the following is true:
-                # 1) The assigned detection is a dummy detection (mRow >= numNew),
-                # 2) There are more tracks than detections (numOld > numNew)
-                # 3) The assigned track is a real track (pCol < numOld)
+                # The track is deleted if the following is true:    
+                # 1) The assigned detection is a dummy detection (mRow >= numNew),    
+                # 2) There are more tracks than detections (numOld > numNew)    轨迹数大于检测数
+                # 3) The assigned track is a real track (pCol < numOld)    被匹配的轨迹是真的    即掉帧！！！
                 elif(numOld > numNew and pCol < numOld):
                     if(self.tracks[pCol].killCount > self.maxKillCount):
                         killedTracks.append(pCol)

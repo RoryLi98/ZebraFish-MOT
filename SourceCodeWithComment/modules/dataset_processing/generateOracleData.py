@@ -8,7 +8,7 @@ def generateOracleData(args):
     Takes the annotated dataset and constructs the perfect output at different stages of the pipeline, except when an occlusion occurs.
 
     Input:
-        gtCSV: path to the ground truth annotations sv file
+        gtCSV: path to the ground truth annotations csv file
         outputDir: path to where the output files are saved
     """
     tracks = args["gtCSV"]

@@ -26,22 +26,22 @@ class BgDetector:
             dataPath: Path to the video files
         """
         
-        self.timer = False
-        self.camId = camId
-        self.onlyHeads = (camId == 1)
+        self.timer = False    # 是否开启计时
+        self.camId = camId    # 视角ID
+        self.onlyHeads = (camId == 1)    # 当为俯拍时，为True
         self.loadSettings(dataPath)
 
-        # Load static background and downsample it
+        # Load static background and downsample it    读入背景图，并且下采样
         bgPath = os.path.join(dataPath, 'background_cam{0}.png'.format(self.camId))
         bg = cv2.imread(bgPath)
         self.bg = bg[::self.downsample,::self.downsample]
 
         # Frame at different stages
-        self.frame = None   # Original frame
-        self.dif = None     # After background subtraction
-        self.blur = None    # After applying blur
-        self.thresh = None  # After thresholding (i.e. binary)
-        self.thin = None    # After skeletonization
+        self.frame = None   # Original frame    源图像
+        self.dif = None     # After background subtraction    存放背景差后的图像
+        self.blur = None    # After applying blur    中值滤波后的图像
+        self.thresh = None  # After thresholding (i.e. binary)    二值化后的图像
+        self.thin = None    # After skeletonization    骨骼化后的图像
 
     def loadSettings(self, path):
         """
@@ -127,10 +127,10 @@ class BgDetector:
             th = self.entropySplit(self.blur)
             self.thresh = self.blur > th
 
-        # Remove everything outside of the ROI
-        self.thresh = self.applyROIMat(self.thresh)
+        # Remove everything outside of the ROI    
+        self.thresh = self.applyROIMat(self.thresh)    # 置掉ROI外的像素值为0
 
-        self.bboxes = applyROIBBs(bboxes, self.tl, self.br)
+        self.bboxes = applyROIBBs(bboxes, self.tl, self.br)    # 过滤掉ROI外的bboxes
 
         # Find keypoints and boundingbox of the objects based on the detector method
         if(self.detectorType == 'blob'):
@@ -304,7 +304,7 @@ class BgDetector:
         
         return np.rad2deg(theta)
  
-    def closestPos(self, img, target):
+    def closestPos(self, img, target):    # 找到图像最近的像素点坐标
         """
         Finds the closest non-zero pixel position in the image to the given target position
         
@@ -327,7 +327,7 @@ class BgDetector:
         
         return pos, dist
 
-    def getBB(self, img):
+    def getBB(self, img):    # 计算图像的AABB FOR BLOB
         """
         Computes the Axis-aligned bounding box for the provide image.
         It is assumed that the input image is a binary image with a single BLOB in it
@@ -360,7 +360,7 @@ class BgDetector:
             
         return tl, br, center, left, right
 
-    def estimateGaussian(self, img):
+    def estimateGaussian(self, img):    # 计算 均值和方差
         """
         Computes the mean and covariance of a gaussian approximated to the foreground pixels in the provided image
         
@@ -378,37 +378,37 @@ class BgDetector:
 
         return (mean, cov)
 
-    def findRotatedBB(self, keypoints):
+    def findRotatedBB(self, keypoints):    # 找到一个旋转矩阵来拟合opencv Keypoints FOR BLOB
         """
         Computes the rotated bounding box that fits the best to the BLOB that each keypoint is assocaited with
         
         Input:
-            keypoints: List of opencv Keypoints or list of BLOB labels
+            keypoints: sList of opencv Keypoints or list of BLOB label
             
         Output:
             bb: List of dictionaries each contatining the top left coordiantes, width, height and angle of the rotated bounding box as well as the center coordiantes of the origianl bounding box
         """
 
-        if self.bboxes and self.camId == 2:
+        if self.bboxes and self.camId == 2:    # 如果已有检测到的bboxes 和 当前为正视，即无keypoints，用range生成数列
                 keypoints = [x for x in range(len(self.bboxes))]
 
         
         bbs = [] 
         for key in keypoints:
             
-            if self.bboxes: # If BBOXs have been detected, utilize these
-                if self.camId == 2:
+            if self.bboxes: # If BBOXs have been detected, utilize these    # 如果已有检测到的bboxes
+                if self.camId == 2:    # 如果当前为正视
                     bbox = self.bboxes[key]
                 else:   
                     bbox = key[-1]
 
-                blob = self.labels.copy()
+                blob = self.labels.copy()    # bbox以外的像素值置为0
                 blob[:bbox[1]] = 0
                 blob[bbox[3]+1:] = 0
                 blob[:,:bbox[0]] = 0
                 blob[:,bbox[2]+1:] = 0
 
-                if self.camId == 2:
+                if self.camId == 2:    # 如果当前为正视，取ROI内最大BLOB
                     # Get the largest blob within the ROI
                     unique_labels, label_count = np.unique(blob, return_counts = True)
 
@@ -420,14 +420,14 @@ class BgDetector:
                     label_idx = np.argmax(label_count)
                     label = unique_labels[label_idx]
                 else:
-                    # Get the closest foreground pixel compared to the detected keypoint
+                    # Get the closest foreground pixel compared to the detected keypoint    #找到最近的点
                     label = self.labels[int(key[0].pt[1]),int(key[0].pt[0])]
                     if label == 0:
                         label_pos, dist = self.closestPos(self.thresh, (int(key[0].pt[0]), int(key[0].pt[1])))
                         label = self.labels[label_pos[1], label_pos[0]]
                 blob = (blob == label).astype(np.bool).astype(np.uint8)
         
-            else: # If no bbox, then just find the closest foreground pixel to the detected keypoint
+            else: # If no bbox, then just find the closest foreground pixel to the detected keypoint    如果未有检测到的bboxes
                 if np.issubdtype(type(key), np.integer): # Cam2
                     label = key
                 else: # Cam1
@@ -758,22 +758,22 @@ class BgDetector:
 
         return keys
 
-    def bgSubtract(self, image):
+    def bgSubtract(self, image):    # 做背景差
         """
         Simple background subtraction method.
         Finds the max value across channels per pixel, and then normalizes the image to the range [0; 255]
         
         Input:
-            image: Color image
+            image: Color image    彩色图像
         
         Output: 
-            res: Resulting grayscale image
+            res: Resulting grayscale image    灰度图
         """
         
         _start = time.time()
         image = image.astype(np.int16)
-        diff = np.abs(image-self.bg)
-        diff = np.max(diff, axis=2)
+        diff = np.abs(image-self.bg)    # 减背景像素值取绝对值
+        diff = np.max(diff, axis=2)    # axis =2 即三维，通道方向
         diff = 255 * (diff-np.min(diff))/(np.max(diff)-np.min(diff))
 
         res = diff.astype(np.uint8)
