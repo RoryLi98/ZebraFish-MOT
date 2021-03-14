@@ -85,7 +85,7 @@ class BgDetector:
         Performs the detection step
         
         Input:
-            frame: The current frame
+            frame: The current frame    当前帧
             camId: Which camera view the fram eis from (1 = Top, 2 = Front)
         
         Output:
@@ -108,22 +108,22 @@ class BgDetector:
             print("Downsample time: {0}".format(_end-_start))
 
         ## Subtract background
-        self.diff = self.bgSubtract(self.frame)
+        self.diff = self.bgSubtract(self.frame)    # 背景剔除
 
         ## Blur image
         _start = time.time()
-        self.blur = cv2.medianBlur(self.diff,self.blurSize)
+        self.blur = cv2.medianBlur(self.diff,self.blurSize)    # 中值滤波
         _end = time.time()
         if(self.timer):
             print("Blur time: {0}".format(_end-_start))        
         
         ## Threshold image. Method is dependent on camera view
         if(self.camId == 1):
-            # Threshold image using intermodes algorithm
-            th = self.intermodesSplit(self.blur)
+            # Threshold image using intermodes algorithm    顶视用intermodesSplit
+            th = self.intermodesSplit(self.blur)    
             self.thresh = self.blur > th
         elif(self.camId == 2):
-            # Threshold image using max entropy
+            # Threshold image using max entropy    侧视用max entropy 
             th = self.entropySplit(self.blur)
             self.thresh = self.blur > th
 
@@ -134,7 +134,7 @@ class BgDetector:
 
         # Find keypoints and boundingbox of the objects based on the detector method
         if(self.detectorType == 'blob'):
-            filtered, bbs = self.blob()
+            filtered, bbs = self.blob()    
         elif(self.detectorType == 'skeleton'):
             filtered, bbs = self.skeleton()
         else:
@@ -191,31 +191,31 @@ class BgDetector:
 
         ## Find BLOBs
         img = self.thresh.astype(np.uint8)*255
-        ret, self.labels = cv2.connectedComponents(img)
+        ret, self.labels = cv2.connectedComponents(img)    # 返回连通域的个数 和 标注的连通域ID矩阵 
 
 
-        ## Sort BLOBs based on their pixel count. Assuming the background (label = 0) is the largest
-        unq_labels, counts = np.unique(self.labels, return_counts = True)
-        unq_labels = unq_labels[1:]
-        counts = counts[1:]
+        ## Sort BLOBs based on their pixel count. Assuming the background (label = 0) is the largest    
+        unq_labels, counts = np.unique(self.labels, return_counts = True)    # 计算各个连通域的ID个数
+        unq_labels = unq_labels[1:]    # 去除id=0类，即为背景
+        counts = counts[1:]     # 去除id=0个数，即为背景
         
-        sorted_indecies = np.argsort(counts)[::-1]
+        sorted_indecies = np.argsort(counts)[::-1]    # 以id类的数量做排序
         unq_labels = unq_labels[sorted_indecies]
         counts = counts[sorted_indecies]
-        counts = counts[counts > self.minBlobSize] # Ignore tiny BLOBs
+        counts = counts[counts > self.minBlobSize] # Ignore tiny BLOBs    滤除小BOLBs
         
         # Find the largest BLOBs 
-        numBlobs = self.n_fish * 2
-        if len(counts) < numBlobs:
+        numBlobs = self.n_fish * 2    # 之所以乘二，可能为了避免镜像带来的问题
+        if len(counts) < numBlobs:    # 若少于，则减少，若大于，则剔除（设置n）
             numBlobs = len(counts)
         
-        unq_labels = unq_labels[:numBlobs]
+        unq_labels = unq_labels[:numBlobs]    # 取排名靠前的n个
         
 
         ## Find rotated bounding boxes of the detected keypoints
-        bbs = self.findRotatedBB(unq_labels)
+        bbs = self.findRotatedBB(unq_labels)    # 寻找旋转矩阵
 
-        ## Keypoints are determined by the center-point
+        ## Keypoints are determined by the center-point    用形心作为Keypoint
         filtered = []
         for b in bbs:
             filtered.append(cv2.KeyPoint(x=b["c_x"],y=b["c_y"], _size = 1))
@@ -240,13 +240,13 @@ class BgDetector:
                 theta: The angle of the rotated bounding box
         """
 
-        ## Fill holdes in the thresholded BLOBs
+        ## Fill holdes in the thresholded BLOBs    填洞是为了骨骼化
         self.thresh = self.fillHoles(self.thresh) 
        
-        ## Extract skeletons of BLOBs
+        ## Extract skeletons of BLOBs    骨骼化
         self.thin = skimage.morphology.skeletonize(self.thresh)
             
-        ## Detect potential keypoints
+        ## Detect potential keypoints    检测潜在的关键点
         detections = self.interestPoints(findJunctions=True)
         
         filtered = []
@@ -294,15 +294,15 @@ class BgDetector:
             theta : The orientation in degrees from [-pi/2 : pi/2]
         """
     
-        _, cov = self.estimateGaussian(img)
+        _, cov = self.estimateGaussian(img)    # 求方差
         
         ## Get the eigenvalues/vectors and sort them by descending eigenvalues
-        U, S, _ = np.linalg.svd(cov)
+        U, S, _ = np.linalg.svd(cov)    # 
         x_v1, y_v1 = U[:,0]
         
         theta = np.arctan((y_v1)/(x_v1))   # arctan vs arctan2. Use arctan2 to handled x_v1 = 0?
         
-        return np.rad2deg(theta)
+        return np.rad2deg(theta)    # 弧度转为角度
  
     def closestPos(self, img, target):    # 找到图像最近的像素点坐标
         """
@@ -317,7 +317,7 @@ class BgDetector:
             dist: The distance between the target and pos pixels
         """
         
-        y, x = np.nonzero(img)
+        y, x = np.nonzero(img)    # ndarray 先行后列
         
         distances = np.sqrt((x-target[0])**2 + (y-target[1])**2)
         nearest_index = np.argmin(distances)
@@ -347,16 +347,16 @@ class BgDetector:
             return (-1, -1), (-1, -1), (-1, -1), (-1, -1), (-1, -1)
 
             
-        tl = (np.min(x), np.min(y))
-        br = (np.max(x), np.max(y))
-        center = (np.mean(x), np.mean(y))
+        tl = (np.min(x), np.min(y))    # 求非零元素的AABB
+        br = (np.max(x), np.max(y))    # 求非零元素的AABB
+        center = (np.mean(x), np.mean(y))    # 求AABB的形点
         
-        if br[0] - tl[0] > br[1] - tl[1]: #If width > height
-            left = (np.min(x), np.mean(y[x == np.min(x)]))      # Middle of the LEFT edge of the BLOB
-            right = (np.max(x), np.mean(y[x == np.max(x)]))     # Middle of the RIGHT edge of the BLOB
-        else:
-            left = (np.mean(x[y == np.min(y)]), np.min(y))      # Middle of the TOP edge of the BLOB
-            right = (np.mean(x[y == np.max(y)]), np.max(y))     # Middle of the BOTTOM edge of the BLOB
+        if br[0] - tl[0] > br[1] - tl[1]: #If width > height    扁平
+            left = (np.min(x), np.mean(y[x == np.min(x)]))      # Middle of the LEFT edge of the BLOB    触框的边界点
+            right = (np.max(x), np.mean(y[x == np.max(x)]))     # Middle of the RIGHT edge of the BLOB   触框的边界点
+        else:                                               #   高瘦
+            left = (np.mean(x[y == np.min(y)]), np.min(y))      # Middle of the TOP edge of the BLOB     触框的边界点
+            right = (np.mean(x[y == np.max(y)]), np.max(y))     # Middle of the BOTTOM edge of the BLOB  触框的边界点
             
         return tl, br, center, left, right
 
@@ -408,51 +408,51 @@ class BgDetector:
                 blob[:,:bbox[0]] = 0
                 blob[:,bbox[2]+1:] = 0
 
-                if self.camId == 2:    # 如果当前为正视，取ROI内最大BLOB
+                if self.camId == 2:    # 如果当前为正视且有bbox，取ROI内最大BLOB
                     # Get the largest blob within the ROI
                     unique_labels, label_count = np.unique(blob, return_counts = True)
 
-                    bg_index = unique_labels == 0
-                    unique_labels = unique_labels[~bg_index]
-                    label_count = label_count[~bg_index]
+                    bg_index = unique_labels == 0    # 取背景bool索引（背景的label值为0）
+                    unique_labels = unique_labels[~bg_index]    # 取非背景的label值
+                    label_count = label_count[~bg_index]    # 取非背景的count值
                     if len(label_count) == 0:
                         continue
-                    label_idx = np.argmax(label_count)
-                    label = unique_labels[label_idx]
-                else:
+                    label_idx = np.argmax(label_count)    # 取除背景外的最大连通区域id索引
+                    label = unique_labels[label_idx]    # 取除背景外的最大连通区域id
+                else:    # Cam1  若为顶视（关键点为CV Keypoint）
                     # Get the closest foreground pixel compared to the detected keypoint    #找到最近的点
                     label = self.labels[int(key[0].pt[1]),int(key[0].pt[0])]
-                    if label == 0:
+                    if label == 0:    # 若id为0（即为背景）
                         label_pos, dist = self.closestPos(self.thresh, (int(key[0].pt[0]), int(key[0].pt[1])))
                         label = self.labels[label_pos[1], label_pos[0]]
-                blob = (blob == label).astype(np.bool).astype(np.uint8)
+                blob = (blob == label).astype(np.bool).astype(np.uint8)    # 有bbox  blob为label的bbox以外置为0 取label id的索引并置为1（int）
         
-            else: # If no bbox, then just find the closest foreground pixel to the detected keypoint    如果未有检测到的bboxes
-                if np.issubdtype(type(key), np.integer): # Cam2
+            else: # If no bbox, then just find the closest foreground pixel to the detected keypoint （无bbox！！）如果无检测到的bboxes，则找离KeyPoint最近的点
+                if np.issubdtype(type(key), np.integer): # Cam2 若为侧视（代表侧视是的Keypoint为数列）
                     label = key
-                else: # Cam1
-                    label = self.labels[int(key[0].pt[1]),int(key[0].pt[0])]
+                else: # Cam1  若为顶视（关键点为CV Keypoint）
+                    label = self.labels[int(key[0].pt[1]),int(key[0].pt[0])]    # 取label图 关键点处坐标的id
                     
                     ## If the label at the keypoint position is the background label, find the closest foreground pixel and take its label instead
-                    if label == 0:
+                    if label == 0:    # 若id为0（即为背景）
                         label_pos, dist = self.closestPos(self.thresh, (int(key[0].pt[0]), int(key[0].pt[1])))
                         label = self.labels[label_pos[1], label_pos[0]]
                 
-                blob = (self.labels == np.ones(self.labels.shape)*label).astype(np.uint8)
+                blob = (self.labels == np.ones(self.labels.shape)*label).astype(np.uint8)    # 没有bbox  self.labels与全图label想与，求出label的索引并置为1
 
 
             if np.sum(blob) == 0:   # If there are no foreground pixels, just skip the keypoint
                 continue
                 
-            theta = self.findRotation(blob)
+            theta = self.findRotation(blob)    # [-pi/2~pi/2]
             tl,br,center,left,right = self.getBB(blob)
 
-            if self.bboxes:
+            if self.bboxes:    # 若预训练，则覆盖tl br
                 tl = (bbox[0],bbox[1])
                 br = (bbox[2],bbox[3])
 
-            rot_blob = rotate(blob, theta, center)
-            r_tl, r_br, _, _, _ = self.getBB(rot_blob)
+            rot_blob = rotate(blob, theta, center)    # 以形心为中心 旋转blob
+            r_tl, r_br, _, _, _ = self.getBB(rot_blob)    # 只用来算weight height
 
             mean, cov = self.estimateGaussian(blob)
             
@@ -471,8 +471,8 @@ class BgDetector:
             bb["aa_h"] = br[1] - tl[1]
 
             # Box points of the BBOX
-            bb["c_x"] = center[0]
-            bb["c_y"] = center[1]
+            bb["c_x"] = center[0]    #形心
+            bb["c_y"] = center[1]    #形心
             bb["l_x"] = left[0]
             bb["l_y"] = left[1]
             bb["r_x"] = right[0]
@@ -483,13 +483,13 @@ class BgDetector:
             
             # Estimated Gaussian
             bb["mean"] = mean
-            if self.camId == 1:
+            if self.camId == 1:    # 若为顶视，则为二维
                 bb["cov"] = np.eye(2)
-            else:
+            else:                  # 若为侧视，则为一维
                 bb["cov"] = cov
 
             # Confidence:
-            if self.bboxes:
+            if self.bboxes:    # 是否有预检测bbox
                 bb["conf"]  = bbox[-1]
             else:             
                 bb["conf"] = 1.0
@@ -498,7 +498,7 @@ class BgDetector:
 
         return bbs
     
-    def fillHoles(self,img):
+    def fillHoles(self,img):    # 填洞
         """
         Fill the holes in the provided binary image. This is done by applying the floodFill function on all the parent contours
         
@@ -782,7 +782,7 @@ class BgDetector:
             print("BG sub time: {0}".format(_end-_start))
         return res
 
-    def interestPoints(self, findJunctions=False):
+    def interestPoints(self, findJunctions=False):    # 找到细化后图像的兴趣点
         """
         Identify interest points (i.e. end points) from skeletonized image
         

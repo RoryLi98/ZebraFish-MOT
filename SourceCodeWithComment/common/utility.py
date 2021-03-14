@@ -647,7 +647,7 @@ def prepareCams(path):
 
 
 
-def getROI(path, camId):
+def getROI(path, camId):    # 获取视角的ROI
     """
     Loads the JSON camera parameters and reads the Region of Interest that has been manually set
     """

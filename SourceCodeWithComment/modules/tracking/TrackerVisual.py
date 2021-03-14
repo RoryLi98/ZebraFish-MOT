@@ -275,7 +275,7 @@ class Tracker:
                 self.tracks[pCol].M = self.matrixInverse(bbox[mRow]["cov"])
                 self.tracks[pCol].mean = bbox[mRow]["mean"]
                 self.tracks[pCol].frame.append(frameNumber)
-                self.tracks[pCol].killCount = 0
+                self.tracks[pCol].killCount = 0     # 若有更新则killCount置为0
                 
             ## If the cost assignment is higher than the ghost threshold, then either create a new track or kill an old one    高于鬼影阈值
             else:
@@ -515,7 +515,7 @@ def videoTracking(path, camId, det, df_fish, video, preDet):
 def imageTracking(path, camId, det, df_fish, video, preDet):
     imgPath = os.path.join(path, 'cam{0}'.format(camId))
     
-    # Close program if video file could not be opened
+    # Close program if image file could not be opened
     if not os.path.isdir(imgPath):
         print("Could not find image folder {0}".format(imgPath))
         sys.exit()
@@ -538,7 +538,7 @@ def imageTracking(path, camId, det, df_fish, video, preDet):
             break
 
         ## Detect keypoints in the frame, and draw them
-        if not preDet or video:
+        if not preDet or video:    #preDet = 0 
             kps, bbs = det.detect(frame)
         
         if preDet:
@@ -669,7 +669,7 @@ if __name__ == "__main__":
 
     if preDet:
         csvTracking(path, camId, det, df_fish)
-    else:
+    else:    # preDet = 0
         if useImages:
             imageTracking(path, camId, det, df_fish, video, preDet)
         else:
