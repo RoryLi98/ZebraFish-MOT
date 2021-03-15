@@ -247,7 +247,7 @@ class BgDetector:
         self.thin = skimage.morphology.skeletonize(self.thresh)
             
         ## Detect potential keypoints    检测潜在的关键点
-        detections = self.interestPoints(findJunctions=True)
+        detections = self.interestPoints(findJunctions=True)    # 算入折点 
         
         filtered = []
 
@@ -256,10 +256,10 @@ class BgDetector:
 
             kps.sort(key=lambda x: x[0].size)
 
-            # Remove small detections   移除
+            # Remove small detections   移除小的目标
             kps = [x for x in kps if x[0].size > 1]
 
-            # Find the largest of the two keypoints placed furthest from each other
+            # Find the largest of the two keypoints placed furthest from each other  
             bestkp = self.filterKeypoints(kps)
 
             # Remove the smallest half of the keypoints (in order to remove tail-points etc)
@@ -539,10 +539,10 @@ class BgDetector:
             for col,colVal in enumerate(kps):
                 dist = np.linalg.norm(np.asarray(rowVal[0].pt)-np.asarray(colVal[0].pt))
                 if(dist > maxDist):
-                    if dist < self.minSkeletonSize: # Ignore short skeletons
+                    if dist < self.minSkeletonSize: # Ignore short skeletons    过滤掉小的目标
                         continue
-                    bestKps = [rowVal, colVal]
-                    maxDist = dist
+                    bestKps = [rowVal, colVal]    #最远的一对
+                    maxDist = dist    # 最大距离
         # Only return the largest of the two keypoints
         if bestKps:
             bestKps.sort(key=lambda x: x[0].size, reverse=True)
@@ -556,10 +556,10 @@ class BgDetector:
             https://imagej.nih.gov/ij/plugins/download/Entropy_Threshold.java
             
         Input: 
-            img: Grayscale image
+            img: Grayscale image   灰度图
             
         Output:
-            res: Threshold value
+            res: Threshold value   阈值门限
         """
         
         
@@ -602,10 +602,10 @@ class BgDetector:
     def intermodesSplit(self, img, verbose=False):
         """
         Find threshold by finding middle point between two modes in the image histogram.
-        If the histogram is not bimodal by default, the image will be mean filtered untill it is
+        If the histogram is not bimodal by default, the image will be mean filtered untill it is  若不是双峰分布，则平均滤波，直到为双峰分布
             
         Input: 
-            img: Grayscale image
+            img: Grayscale image    灰度图
             verbose: Boolean stating whether information should be printed
             
         Output:
@@ -620,22 +620,22 @@ class BgDetector:
         # Calc histogram
         hist = np.bincount(img.flatten().astype(int))
 
-        # Iterative mean filtering (window size = 3) until hist is bimodal
+        # Iterative mean filtering (window size = 3) until hist is bimodal  窗口大小为3
         iterations = 0
-        f = np.ones((3))/3
-        while(not(self.isBimodal(hist))):
+        f = np.ones((3))/3    # array([0.33333333, 0.33333333, 0.33333333])
+        while(not(self.isBimodal(hist))):    # 若不是双峰分布，则平均滤波，直到为双峰分布
             hist = np.convolve(hist, f, 'same')
             iterations += 1
-            if(iterations > 10000):
+            if(iterations > 10000):    # 10k次平均滤波还是达不到双峰，则break
                 tt = 0
                 break
         
         # Find mean of the two peaks in the histogram
         tt = []
         for i in np.arange(1,len(hist)-1):
-            if(hist[i-1] < hist[i] and hist[i+1] < hist[i]):
+            if(hist[i-1] < hist[i] and hist[i+1] < hist[i]):    # 极大值
                 tt.append(i)    
-        thres = np.floor(np.mean(tt))
+        thres = np.floor(np.mean(tt))   # 求峰值平均
     
         _end =  time.time() 
         if(verbose):
@@ -647,7 +647,7 @@ class BgDetector:
 
     def isBimodal(self, hist):
         """
-        Check if the provided histogram is bimodal, by counting how many local maximum bins there are
+        Check if the provided histogram is bimodal, by counting how many local maximum bins there are   数有几个极大值
             
         Input: 
             hist: Histogram contained in numpy array
@@ -673,11 +673,11 @@ class BgDetector:
         Non maximum suppression of the supplied keypoints, based on the overlap of the keypoints' bounding boxes.
         
         Input:
-            kp: Dict of lists of found cv2.KeyPoints
+            kp: Dict of lists of found cv2.KeyPoints   字典：每个list装有KeyPoints
             overlap_thresh: Threhsold for how much the keypoitns bounding boxes can overlap
                 
         Output:
-            keys: List of fitlered keypoints
+            keys: List of fitlered keypoints    过滤好的关键点
         """
         
         
@@ -835,8 +835,8 @@ class BgDetector:
                 label_idx = np.argmax(label_count)    # 取最长的label 索引
                 label = unique_labels[label_idx]    # 取最长的label id 
 
-                reduced_labels = (reduced_labels == label).astype(np.bool).astype(np.uint8)
-                reduced_thin = np.multiply(reduced_thin, reduced_labels)
+                reduced_labels = (reduced_labels == label).astype(np.bool).astype(np.uint8)    # 索引矩阵 整形化
+                reduced_thin = np.multiply(reduced_thin, reduced_labels)    # 矩阵对应位置相乘 相与
 
                 # Get the interest point of the most prominent thinned skeleton in the BBOX
                 points = self.getInterestPoints(reduced_thin, self.labels, kernel, findJunctions, bbox)
@@ -852,7 +852,7 @@ class BgDetector:
         # Remove any empty lists in the dict
         endpoints = {key:endpoints[key] for key in endpoints if endpoints[key]}
 
-        # Apply Non-maximum suppresion in order to remove redundant points close to each other
+        # Apply Non-maximum suppresion in order to remove redundant points close to each other    剔除冗余点 
         for label in endpoints:
             endpoints[label] = self.nms(endpoints[label], overlap_thresh=self.nms_thresh)
 
@@ -860,7 +860,7 @@ class BgDetector:
         
         if(self.timer):
             print("Interest points time: {0}".format(_end-_start))    
-        return endpoints
+        return endpoints  # 返回
 
     def getInterestPoints(self, thinned_image, labels, kernel, findJunctions, bbox):
         """

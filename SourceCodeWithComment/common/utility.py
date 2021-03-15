@@ -442,7 +442,7 @@ def getDropIndecies(df, verbose = False):
     Goes through a dataframe, finds all cases where there are several rows for the same frame in a single Tracklet.
     A graph is constructed where the distance is minimized. The indecies which should be removed from the dataframe is returned
 
-    It is expected that the indecies of the dataframe are unique for each row
+    It is expected that the indecies of the dataframe are unique for each row    希望每行都是唯一的
     '''
 
     ids = df.id.unique() # array containing all unique tracklets ids
@@ -450,9 +450,9 @@ def getDropIndecies(df, verbose = False):
     
     # Iterate over each unique ID in the dataframe
     for iID in ids:
-        df_id = df[df.id == iID]  # Sub dataframe, containing all rows relevant for the current ID. Indecies are still that of the main dataframe
+        df_id = df[df.id == iID]  # Sub dataframe, containing all rows relevant for the current ID. Indecies are still that of the main dataframe 取id为iTD的数行
         
-        frame_count = df_id["frame"].value_counts()  # How many times does a frame occur in the dataframe
+        frame_count = df_id["frame"].value_counts()  # How many times does a frame occur in the dataframe  有多少个不同值
         multi_assignment =  frame_count[frame_count >  1].sort_index() # isolating the frames with multiple assignments
         
         if len(multi_assignment) == 0:
@@ -552,7 +552,7 @@ def getDropIndecies(df, verbose = False):
     return drop_idx
 
 
-def extractRoi(frame, pos, dia):
+def extractRoi(frame, pos, dia):    # 提取某点附近的ROI 边长dia
     """
     Extracts a region of interest with size dia x dia in the provided frame, at the specied position
     
@@ -649,7 +649,7 @@ def prepareCams(path):
 
 def getROI(path, camId):    # 获取视角的ROI
     """
-    Loads the JSON camera parameters and reads the Region of Interest that has been manually set
+    Loads the JSON camera parameters and reads the Region of Interest that has been manually set    人为设置ROI
     """
 
     # Load json file
@@ -671,8 +671,8 @@ def getROI(path, camId):    # 获取视角的ROI
         x_coords.append(int(entry["camera"]["x"]))
         y_coords.append(int(entry["camera"]["y"]))
 
-    tl = np.asarray([np.min(x_coords), np.min(y_coords)], dtype=int)
-    br = np.asarray([np.max(x_coords), np.max(y_coords)], dtype=int)
+    tl = np.asarray([np.min(x_coords), np.min(y_coords)], dtype=int)    # 取最小
+    br = np.asarray([np.max(x_coords), np.max(y_coords)], dtype=int)    # 取最大
 
     return tl, br
 
@@ -694,7 +694,7 @@ def applyROIBBs(bboxes, tl, br):
     roi_bboxes = []
 
     for bbox in bboxes:
-        if bbox[0] >= tl[0] and bbox[1] >= tl[1] and bbox[2] <= br[0] and bbox[3] <= br[1]:
+        if bbox[0] >= tl[0] and bbox[1] >= tl[1] and bbox[2] <= br[0] and bbox[3] <= br[1]:    # 当bbox全都在ROI内
             roi_bboxes.append(bbox)
     
     if len(roi_bboxes) == 0:
