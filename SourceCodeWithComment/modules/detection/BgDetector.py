@@ -256,7 +256,7 @@ class BgDetector:
 
             kps.sort(key=lambda x: x[0].size)
 
-            # Remove small detections 
+            # Remove small detections   移除
             kps = [x for x in kps if x[0].size > 1]
 
             # Find the largest of the two keypoints placed furthest from each other
@@ -805,35 +805,35 @@ class BgDetector:
         ret, self.labels = cv2.connectedComponents(self.thresh.astype(np.uint8))
         
         endpoints = {}
-        if self.bboxes: # If BBOXs have been detected, utilize this information
+        if self.bboxes: # If BBOXs have been detected, utilize this information    #若有预检测bbox
 
             for idx, bbox in enumerate(self.bboxes):
 
                 # Look at the thinned image within the current BBOX, and do the same for the labels mat
-                reduced_thin = self.thin.copy()
+                reduced_thin = self.thin.copy()    # 对bbox外的像素置0
                 reduced_thin[:bbox[1]] = 0
                 reduced_thin[bbox[3]+1:] = 0
                 reduced_thin[:,:bbox[0]] = 0
                 reduced_thin[:,bbox[2]+1:] = 0
 
-                reduced_labels = self.labels.copy()
+                reduced_labels = self.labels.copy()    # 对bbox外的像素置0
                 reduced_labels[:bbox[1]] = 0
                 reduced_labels[bbox[3]+1:] = 0
                 reduced_labels[:,:bbox[0]] = 0
                 reduced_labels[:,bbox[2]+1:] = 0
 
                 # Get unique labels in the bbox, all except background (0)
-                unique_labels, label_count = np.unique(reduced_labels, return_counts = True)
+                unique_labels, label_count = np.unique(reduced_labels, return_counts = True)   
 
                 bg_index = unique_labels == 0
-                unique_labels = unique_labels[~bg_index]
-                label_count = label_count[~bg_index]
+                unique_labels = unique_labels[~bg_index]    # 求非背景的label
+                label_count = label_count[~bg_index]    # 求非背景各 label id的数量
                 if len(label_count) == 0:
                     continue
                 
                 # Get the most occuring label, and filter the thinned and label mats
-                label_idx = np.argmax(label_count)
-                label = unique_labels[label_idx]
+                label_idx = np.argmax(label_count)    # 取最长的label 索引
+                label = unique_labels[label_idx]    # 取最长的label id 
 
                 reduced_labels = (reduced_labels == label).astype(np.bool).astype(np.uint8)
                 reduced_thin = np.multiply(reduced_thin, reduced_labels)
