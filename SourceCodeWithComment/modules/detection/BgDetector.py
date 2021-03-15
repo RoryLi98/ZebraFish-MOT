@@ -254,27 +254,27 @@ class BgDetector:
         for label in detections:
             kps = detections[label]
 
-            kps.sort(key=lambda x: x[0].size)
+            kps.sort(key=lambda x: x[0].size)    # 通过各点的size排序（升序）
 
             # Remove small detections   移除小的目标
             kps = [x for x in kps if x[0].size > 1]
 
-            # Find the largest of the two keypoints placed furthest from each other  
+            # Find the largest of the two keypoints placed furthest from each other  找到最长最大的关键点
             bestkp = self.filterKeypoints(kps)
 
-            # Remove the smallest half of the keypoints (in order to remove tail-points etc)
-            if(self.onlyHeads and len(kps) > 1):
+            # Remove the smallest half of the keypoints (in order to remove tail-points etc)   
+            if(self.onlyHeads and len(kps) > 1):    # 当 camId == 1 ，移除尾部关键点
                 numPts = len(kps)//2
-                kps = kps[-numPts:] 
+                kps = kps[-numPts:]     #移除一半的关键点 因为是升序，所以保留size大的小一半
 
-            # If the bestkp has been removed, add it again (largest of the two keypoints placed furthest from each other)
+            # If the bestkp has been removed, add it again (largest of the two keypoints placed furthest from each other)  若最佳关键点被移除，重新加入
             if bestkp and (not bestkp[0] in kps):
                 kps.extend(bestkp)
                 
             #kps.sort(key=lambda x: x.size)
             #filtered += [kps[-1]]
 
-            filtered += kps
+            filtered += kps    # 叠叠叠
 
         ## Find rotated bounding boxes of the detected keypoints
         bbs = self.findRotatedBB(filtered)
@@ -383,7 +383,7 @@ class BgDetector:
         Computes the rotated bounding box that fits the best to the BLOB that each keypoint is assocaited with
         
         Input:
-            keypoints: sList of opencv Keypoints or list of BLOB label
+            keypoints: List of opencv Keypoints or list of BLOB label
             
         Output:
             bb: List of dictionaries each contatining the top left coordiantes, width, height and angle of the rotated bounding box as well as the center coordiantes of the origianl bounding box
@@ -546,7 +546,7 @@ class BgDetector:
         # Only return the largest of the two keypoints
         if bestKps:
             bestKps.sort(key=lambda x: x[0].size, reverse=True)
-            return [bestKps[0]]
+            return [bestKps[0]]    # 只返回size最大的点
         return []
     
     def entropySplit(self, img):
@@ -713,13 +713,13 @@ class BgDetector:
         # and get the sorted index values based on    以面积大小升序
         # the area (sorted in ascending order).
         area = (x2 - x1) * (y2 - y1)
-        idxs = np.argsort(area)
+        idxs = np.argsort(area)    # 按面积升序排序
 
         while len(idxs) > 0:
             # Get the highest area point of the ones remaining    
             last = len(idxs) - 1    # 取最大面积索引的最后一个值
             i = idxs[last]    # 取最大面积的索引
-            pick.append(i)   # 添加最大索引
+            pick.append(i)   # 添加最大索引，循环添加交叠率小于0.5的点
 
             # Calculate the bounding boxes which contain the current point, and each of the other points per box.    
             # Finds the upper left and lower right corners of the box that will be there if the two points' bounding boxes overlap
@@ -728,33 +728,33 @@ class BgDetector:
             xx2 = np.minimum(x2[i], x2[idxs[:last]])    # 求其他比右上角点坐标更左下的点
             yy2 = np.minimum(y2[i], y2[idxs[:last]])
             
-            # Get the height/width of the new bounding boxes, used to calculate area    # 求
-            w = np.maximum(0, xx2 - xx1)
-            h = np.maximum(0, yy2 - yy1)
+            # Get the height/width of the new bounding boxes, used to calculate area    # 求最大交集面积
+            w = np.maximum(0, xx2 - xx1)    
+            h = np.maximum(0, yy2 - yy1)    
 
             # Determine the ratio between the new bounding box areas and the area of the current point in focus
-            overlap = (h*w) / area[i]
+            overlap = (h*w) / area[i]    # 求交叠率
         
             # Handle cases of total overlap 
             ## Get indecies for when the min x/min y/max x/max y are inside the bb of the point in focus.
-            x1max = np.where(x1[i] > x1[idxs[:last]])[0]
-            y1max = np.where(y1[i] > y1[idxs[:last]])[0]
-            x2max = np.where(x2[i] < x2[idxs[:last]])[0]
-            y2max = np.where(y2[i] < y2[idxs[:last]])[0]
+            x1max = np.where(x1[i] > x1[idxs[:last]])[0]    # 取得比该点左下的点的索引
+            y1max = np.where(y1[i] > y1[idxs[:last]])[0]    # 取得比该点左下的点的索引
+            x2max = np.where(x2[i] < x2[idxs[:last]])[0]    # 取得比该点右上的点的索引
+            y2max = np.where(y2[i] < y2[idxs[:last]])[0]    # 取得比该点右上的点的索引
 
-            max1 = list(set(x1max).intersection(y1max))  ## Find the cases where both x1max/y1max are true
-            max2 = list(set(x2max).intersection(y2max))  ## Find the cases where both x2max/y2max are true
-            for k in max2:
+            max1 = list(set(x1max).intersection(y1max))  ## Find the cases where both x1max/y1max are true     取交集
+            max2 = list(set(x2max).intersection(y2max))  ## Find the cases where both x2max/y2max are true     取交集
+            for k in max2:    
                 for i in max1:
-                    if k == i:  # The case where all corners of the box are within in the bb of the point in focus
-                        overlap[k] = 1.0
+                    if k == i:  # The case where all corners of the box are within in the bb of the point in focus    这种情况，bb被包含
+                        overlap[k] = 1.0  # 交叠率为1 及百分百
 
-            # Delete points that overlap too much with the current point 
-            idxs = np.delete(idxs, np.concatenate(([last], np.where(overlap > overlap_thresh)[0])))
+            # Delete points that overlap too much with the current point 循环删除交叠率过高的点，直到交叠率都小于
+            idxs = np.delete(idxs, np.concatenate(([last], np.where(overlap > overlap_thresh)[0])))   # 删除交叠率大于0.5的点
 
         keys = []
         for i in pick:
-            keys.append(kp[i])
+            keys.append(kp[i])   # 返回nms后的点（pt，bbox）
 
         return keys
 
