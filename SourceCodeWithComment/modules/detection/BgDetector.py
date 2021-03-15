@@ -694,41 +694,41 @@ class BgDetector:
         x2 = []
         y2 = []
         for i in kp:
-            # Radius of bounding box
+            # Radius of bounding box    # 半径至少为2，至少剔除一个
             radius = max(i[0].size//2, 2) # Enforces minimum radius of 2, to insure overlap between direct neighbour pixels, and force removal of one of them (using NMS)
-            # Upper left corner of bounding box
+            # Upper left corner of bounding box    # 左上角往外扩2
             x1.append(i[0].pt[0]-radius)
             y1.append(i[0].pt[1]-radius)
-            # Lower right corner of bounding box
+            # Lower right corner of bounding box    # 右下角往外扩2
             x2.append(i[0].pt[0]+radius)
             y2.append(i[0].pt[1]+radius)
 
-        # Convert to float numpy arrays
-        x1 = np.asarray(x1,dtype=np.float32)
-        y1 = np.asarray(y1,dtype=np.float32)
-        x2 = np.asarray(x2,dtype=np.float32)
-        y2 = np.asarray(y2,dtype=np.float32)
+        # Convert to float numpy arrays    转至float
+        x1 = np.asarray(x1,dtype=np.float32)    # 左上
+        y1 = np.asarray(y1,dtype=np.float32)    # 左上
+        x2 = np.asarray(x2,dtype=np.float32)    # 右下
+        y2 = np.asarray(y2,dtype=np.float32)    # 右下
         
-        # Calculate the area of the bounding boxes
-        # and get the sorted index values based on
+        # Calculate the area of the bounding boxes    计算面积
+        # and get the sorted index values based on    以面积大小升序
         # the area (sorted in ascending order).
         area = (x2 - x1) * (y2 - y1)
         idxs = np.argsort(area)
 
         while len(idxs) > 0:
-            # Get the highest area point of the ones remaining
-            last = len(idxs) - 1
-            i = idxs[last]
-            pick.append(i)
+            # Get the highest area point of the ones remaining    
+            last = len(idxs) - 1    # 取最大面积索引的最后一个值
+            i = idxs[last]    # 取最大面积的索引
+            pick.append(i)   # 添加最大索引
 
-            # Calculate the bounding boxes which contain the current point, and each of the other points per box.
+            # Calculate the bounding boxes which contain the current point, and each of the other points per box.    
             # Finds the upper left and lower right corners of the box that will be there if the two points' bounding boxes overlap
-            xx1 = np.maximum(x1[i], x1[idxs[:last]])
+            xx1 = np.maximum(x1[i], x1[idxs[:last]])    # 求其他比左上角点坐标更右下的点
             yy1 = np.maximum(y1[i], y1[idxs[:last]])
-            xx2 = np.minimum(x2[i], x2[idxs[:last]])
+            xx2 = np.minimum(x2[i], x2[idxs[:last]])    # 求其他比右上角点坐标更左下的点
             yy2 = np.minimum(y2[i], y2[idxs[:last]])
             
-            # Get the height/width of the new bounding boxes, used to calculate area
+            # Get the height/width of the new bounding boxes, used to calculate area    # 求
             w = np.maximum(0, xx2 - xx1)
             h = np.maximum(0, yy2 - yy1)
 
@@ -835,22 +835,22 @@ class BgDetector:
                 label_idx = np.argmax(label_count)    # 取最长的label 索引
                 label = unique_labels[label_idx]    # 取最长的label id 
 
-                reduced_labels = (reduced_labels == label).astype(np.bool).astype(np.uint8)    # 索引矩阵 整形化
+                reduced_labels = (reduced_labels == label).astype(np.bool).astype(np.uint8)    # 索引矩阵 整型化
                 reduced_thin = np.multiply(reduced_thin, reduced_labels)    # 矩阵对应位置相乘 相与
 
-                # Get the interest point of the most prominent thinned skeleton in the BBOX
+                # Get the interest point of the most prominent thinned skeleton in the BBOX    # 从该最显著的骨骼化模型中找兴趣点    
                 points = self.getInterestPoints(reduced_thin, self.labels, kernel, findJunctions, bbox)
                 for key in points:
                     if key in endpoints:
-                        endpoints[key].extend(points[key])
+                        endpoints[key].extend(points[key])    # 追加
                     else:
-                        endpoints[key] = points[key]
+                        endpoints[key] = points[key]    # 赋值
 
         else:
-            endpoints = self.getInterestPoints(self.thin, self.labels, kernel, findJunctions, None)
+            endpoints = self.getInterestPoints(self.thin, self.labels, kernel, findJunctions, None)    #若无bbox 则照样提取，但endpoints内无bbox
 
         # Remove any empty lists in the dict
-        endpoints = {key:endpoints[key] for key in endpoints if endpoints[key]}
+        endpoints = {key:endpoints[key] for key in endpoints if endpoints[key]}    #剔除值为empty的键值
 
         # Apply Non-maximum suppresion in order to remove redundant points close to each other    剔除冗余点 
         for label in endpoints:
@@ -877,25 +877,25 @@ class BgDetector:
             encpoints: Dictionary of detected interest points
 
         """
-        filtered = cv2.filter2D(thinned_image.astype(np.uint8),-1,kernel)
+        filtered = cv2.filter2D(thinned_image.astype(np.uint8),-1,kernel)    # 用卷积核提取兴趣点
 
-        # Find endpoints
-        positions = np.where((filtered==116) | (filtered==117) | (filtered==118) | (filtered==131))
-        points = list(zip(list(positions[0]),list(positions[1])))
-        endpoints = self.points2CvKeypoints(points, labels, bbox)
+        # Find endpoints    找端点
+        positions = np.where((filtered==116) | (filtered==117) | (filtered==118) | (filtered==131))    # where => (array([0, 0, 2], dtype=int64), array([0, 1, 2], dtype=int64))
+        points = list(zip(list(positions[0]),list(positions[1])))    # [(0, 0), (0, 1), (2, 2)] 
+        endpoints = self.points2CvKeypoints(points, labels, bbox)    # 主要是设置size，即头宽
 
-        # Find junctions
+        # Find junctions    找分叉点
         if(findJunctions):
             positions = np.where((filtered==148) | (filtered==149) | (filtered==150) | (filtered==151))
             points = list(zip(list(positions[0]),list(positions[1])))
             junctions = self.points2CvKeypoints(points, labels, bbox)
 
             for label in junctions:
-                if(label in endpoints):
-                    # Decrease the significance (size) of the junctions-points. (As they are usually larger than the other keypoints)
+                if(label in endpoints):   # 若分叉点是端点的话
+                    # Decrease the significance (size) of the junctions-points. (As they are usually larger than the other keypoints)  缩小分叉点的size，它们通常大区其他关键点
                     for x in junctions[label]:
-                        x[0].size = x[0].size/2.5
-                    endpoints[label] += junctions[label]
+                        x[0].size = x[0].size/2.5    # size缩小 [0]为pt，[1]为bbox
+                    endpoints[label] += junctions[label]    # 添加
 
         return endpoints
 
@@ -904,31 +904,31 @@ class BgDetector:
         Converts the provided points into cv2.Keypoint objects.
 
         Input:
-            points: List of points
-            labels: Grayscale image where each BLOB has pixel value equal to its label
+            points: List of points   点集
+            labels: Grayscale image where each BLOB has pixel value equal to its label    灰度图，点的像素值是他的label ID
             
         Output:
             keypoints: Dict of cv2.KeyPoints obejcts, where the keys are the BLOB labels.
         """
         
         keypoints = {}
-        for p in points:
-            currLabel = labels[p]
+        for p in points: 
+            currLabel = labels[p]   # 该点的label id
             if(currLabel not in keypoints):
-                keypoints[currLabel] = []
+                keypoints[currLabel] = []    # 新建以该label id的键，值为空列表
 
-            size,rot = self.calcEig(*p,self.thresh,labels, self.winSize)
+            size,rot = self.calcEig(*p,self.thresh,labels, self.winSize)    # 返回关键点的size大小和rotation角度
             if(size == -1):
                 continue
-            kp = cv2.KeyPoint(float(p[1]),float(p[0]),size,rot,-1,-1,currLabel)
-            keypoints[currLabel].append([kp, bbox])
+            kp = cv2.KeyPoint(float(p[1]),float(p[0]),size,rot,-1,-1,currLabel)   # 创建关键点
+            keypoints[currLabel].append([kp, bbox])    # 向该lalel id 添入该关键点和bbox
         return keypoints
     
     def calcEig(self,y,x,image,labels,winSize=20,calcAngle=False):
         """
-        Determine the size (Importance) of the keypoint, and the orientation of the keypoint (if set to).
+        Determine the size (Importance) of the keypoint, and the orientation of the keypoint (if set to).    决定关键点的size，和关键点的指向
         This is done by determining the eigenvalues of the covariance matrix of the coordinate values of the detected head, in some window defined by winSize x winSize
-        Input:
+        Input:                          通过算出检测的头附近的坐标值方差矩阵的特征值
             x: x coordinate of the keypoint
             y: y coordinate of the keypoint
             image: Binary image
@@ -941,34 +941,34 @@ class BgDetector:
             angle: Angle of the keypoint
         """
         ## Find the BLOB label at the keypoint
-        labelId = labels[y,x]
+        labelId = labels[y,x]    # 取该点的label id
         
         ## extract patch around keypoint
-        roi = extractRoi(labels,(x,y),winSize)
-        mask = roi == labelId
+        roi = extractRoi(labels,(x,y),winSize)    # 取该点为中心取 winSize x winSize 的 ROI
+        mask = roi == labelId    # 取该ROI内相同label id的索引
         
         y, x = np.nonzero(mask)
-        x_ = x - winSize/2
-        y_ = y - winSize/2
-        coords = np.vstack([x_,y_])
+        x_ = x - winSize/2    # 以关键点为圆心，进行归零
+        y_ = y - winSize/2    # 以关键点为圆心，进行归零
+        coords = np.vstack([x_,y_])    # 列向排列
 
         # Skip BLOBs with size smaller than minimum BLOB size
-        if(coords.shape[-1] <= self.minPatchArea):
+        if(coords.shape[-1] <= self.minPatchArea):    # 若Blob的size小于预设值
            return -1,-1
        
-        ## Calculate eigenvectors of the covariance matrix of the patch
-        cov = np.cov(coords)
-        eVal, eVec = np.linalg.eig(cov)
+        ## Calculate eigenvectors of the covariance matrix of the patch    
+        cov = np.cov(coords)    # 求ROI点集的协方差
+        eVal, eVec = np.linalg.eig(cov)    # 计算特征值和特征向量
 
         # Take the smallest eigenvalue, as it will most likely be the variance along the width of the head
-        size = min(eVal)
+        size = min(eVal)    # 取最小的特征值，最可能是头的宽度
         
         angle = 0.0
-        if(calcAngle):
-            sort_id = np.argmax(eVal)
-            eVec1 = eVec[:,sort_id]        
-            x, y = eVec1    
-            angle = np.degrees(np.arctan2(x,y))
+        if(calcAngle):    # 若要计算角度
+            sort_id = np.argmax(eVal)    # 取最大特征值的索引
+            eVec1 = eVec[:,sort_id]     # 取最大特征值对应的特征向量   
+            x, y = eVec1    # 取该特征向量    
+            angle = np.degrees(np.arctan2(x,y))    # 求角度
 
         return size,angle
 
