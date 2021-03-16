@@ -29,7 +29,7 @@ class Tracker:
             camId: Camera view of the video to be analysed. 1 = Top, 2 = Front
         """
         
-        self.cam = camId
+        self.cam = camId    # 摄像头ID
         self.loadSettings(dataPath)
         self.tracks = []
         self.trackCount = 0
@@ -52,19 +52,19 @@ class Tracker:
         c = config['Tracker']
 
         if self.cam == 1:
-            self.ghostThreshold = c.getfloat('cam1_ghost_threshold')
+            self.ghostThreshold = c.getfloat('cam1_ghost_threshold')    # 允许个体间帧间距离
         elif self.cam == 2:
-            self.ghostThreshold = c.getfloat('cam2_ghost_threshold')
+            self.ghostThreshold = c.getfloat('cam2_ghost_threshold')    # 允许个体间帧间距离
         else:
             print("Supplied camera id, {}, is not supported".format(self.cam))
             sys.exit()
 
-        self.maxKillCount = c.getint("max_kill_count")
-        self.minConfidence = c.getfloat("min_confidence")
+        self.maxKillCount = c.getint("max_kill_count")    # 长时间掉帧
+        self.minConfidence = c.getfloat("min_confidence")    # 最小置信度
     
     
 
-    def matrixInverse(self, X, lambd = 0.001, verbose=False):
+    def matrixInverse(self, X, lambd = 0.001, verbose=False):    # 矩阵求逆
         """
         Tries to calculate the inverse of the supplied matrix.
         If the supplied matrix is singular it is regularized by the supplied lambda value, which is added to the diagonal of the matrix
@@ -80,15 +80,15 @@ class Tracker:
                 print("Condition number of {}".format(np.linalg.cond(X)))        
             X_inv = np.linalg.inv(X)
         except np.linalg.LinAlgError as e:
-            if 'Singular matrix' in str(e):
+            if 'Singular matrix' in str(e):    # 若是奇异矩阵，则向该矩阵的对角线元素+lambd
                 if verbose:
                     print("Adding regularizer of {}".format(lambd))
                     print("Condition number of {}".format(np.linalg.cond(X)))
-                X = X + np.diag(np.repeat(lambd,X.shape[1]))
+                X = X + np.diag(np.repeat(lambd,X.shape[1]))    # 对角线元素+lambd
                 
                 if verbose:
                     print("Condition number of {}".format(np.linalg.cond(X)))
-                X_inv = np.linalg.inv(X)
+                X_inv = np.linalg.inv(X)    # 求逆
             else:
                 raise
         
@@ -96,11 +96,11 @@ class Tracker:
 
     def mahalanobisDistance(self, Xp, Xg, M, psd=False):
         """
-        Calcualtes the squared Mahalanobis distance between the supplied probe and gallery images
+        Calcualtes the squared Mahalanobis distance between the supplied probe and gallery images    测试 训练 ？
         
         Input:
-            Xp: Numpy matrix containg the probe image features, with dimesnions [n_probe, n_features]
-            Xg: Numpy matrix containg the gallery image features, with dimesnions [n_gallery, n_features]
+            Xp: Numpy matrix containg the probe image features, with dimensions [n_probe, n_features]    
+            Xg: Numpy matrix containg the gallery image features, with dimensions [n_gallery, n_features]
             M: The Mahalanobis matrix to be used, with dimensions [n_features, n_features]
             psd: Describes whether M is a PSD matrix or not. If True the sklearn pairwise_distances function will be used, while if False a manual implementation is used
             
@@ -109,15 +109,15 @@ class Tracker:
         """
         
         if psd:
-            return pairwise_distances(Xp, Xg, metric="mahalanobis", VI=M)
-        else:    
+            return pairwise_distances(Xp, Xg, metric="mahalanobis", VI=M)    # PSD = Positive semi definite，若M是半正定矩阵，则用 sklearn pairwise_distances function计算
+        else:    # 若不是半正定矩阵，则用人工方法算
             mA = Xp.shape[0]
             mB = Xg.shape[0]
-            dm = np.empty((mA, mB), dtype=np.double)
+            dm = np.empty((mA, mB), dtype=np.double)    # probe行 gallery列
             for i in range(0, mA):
                 for j in range(0, mB):  
                     difference = Xp[i] - Xg[j]
-                    dm[i,j] = difference.dot(M.dot(difference.T)) 
+                    dm[i,j] = difference.dot(M.dot(difference.T))     # 求乘积
             return dm
     
 
@@ -137,12 +137,12 @@ class Tracker:
             pDist: Matrix of size [s,s], containing the pairwise distances
         """
         
-        maxLen = int(max(len(self.detections),len(self.tracks)))    # detections, tracks的最大值
+        maxLen = int(max(len(self.detections),len(self.tracks)))    # detections, tracks 的最大值
 
-        # Init matrix (including ghost tracks)    初始化矩阵
-        pDist = np.ones((maxLen,maxLen), np.float32)*self.ghostThreshold
+        # Init matrix (including ghost tracks)    初始化矩阵（方阵）
+        pDist = np.ones((maxLen,maxLen), np.float32)*self.ghostThreshold    #初始化乘上鬼影阈值
 
-        # Update matrix
+        # Update matrix    更新矩阵
         for detIndex in range(len(self.detections)):
             for trackIndex in range(len(self.tracks)):
                 pDist[detIndex][trackIndex] = self.distanceFunc(detIndex,trackIndex)    # 计算距离 先检测目标 后轨迹
@@ -152,7 +152,7 @@ class Tracker:
     
     def distanceFunc(self, detIndex, trackIndex):
         """
-        Calculates a cost values between the provided detection and track    计算欧式距离
+        Calculates a cost values between the provided detection and track    计算欧式距离/马氏距离
         
         The Euclidean distance is calculated, and turned into a norm by dividing with the max allwoed distance, from the config file.
         
@@ -171,25 +171,25 @@ class Tracker:
             # L2 distance
             distCost = np.linalg.norm(self.tracks[trackIndex].pos[-1]-np.array(self.detections[detIndex].pt))
         elif self.cam == 2:  # Make sure the coordinates are in order x,y and not y,x (as the cov matrix will be incorrect then)
-            # Mahalanobis distance  侧视的话，用马氏距离
-            detPt = np.asarray(self.detections[detIndex].pt).reshape(1,2)
-            trackPt = np.asarray(self.tracks[trackIndex].pos[-1]).reshape(1,2)
+            # Mahalanobis distance    # 侧视的话，用马氏距离
+            detPt = np.asarray(self.detections[detIndex].pt).reshape(1,2)    # 关键点的坐标 
+            trackPt = np.asarray(self.tracks[trackIndex].pos[-1]).reshape(1,2)    # 轨迹最后一个点的坐标
             mdist = self.mahalanobisDistance(detPt, trackPt, self.tracks[trackIndex].M)  # Square mahalanobis distances
 
             distCost = np.sqrt(mdist)
         
-        return distCost
+        return distCost    # 距离（一个数）
 
 
     def findMatches(self, assignM):
         """
-        Find matches in the matrix computed using Hungarian
+        Find matches in the matrix computed using Hungarian    用匈牙利算法找匹配
         
         Input:
-            assignM: A binary matrix, where 1 indicates an assignment of row n to column m, and otherwise 0
+            assignM: A binary matrix, where 1 indicates an assignment of row n to column m, and otherwise 0    二值矩阵 n行 to m列
                 
         Output: 
-            matches: List of tuples containing the row and column indecies for the matches
+            matches: List of tuples containing the row and column indecies for the matches    返回匹配的元组
         """
 
         matches = []
@@ -223,14 +223,14 @@ class Tracker:
     
     def recognise(self, frameNumber, detections, bbox, verbose=False):
         """
-        Update tracker with new measurements.
+        Update tracker with new measurements.    用每帧检测到的目标更新轨迹
         This is done by calculating a pairwise distance matrix and finding the optimal solution through the Hungarian algorithm.    计算矩阵成对距离，并用最优化算法：匈牙利算法求解
         
         Input: 
             frameNumber: The current frame number (Int)    当前帧号
             detections: List of cv2.keyPoints (the detections) found in the current frame.    当前帧中关键点
             bbox: List of dicts containing bounding boxes associated with the detected keypoints.    关键点的bbox
-            frame: The current frame as numpy array    ？？？
+            frame: The current frame as numpy array    当前帧号
             labels: Grayscale image where each BLOB has pixel value equal to its label    灰度图 
             verbose: Whether to print information or not.
             
@@ -238,7 +238,7 @@ class Tracker:
             tracks: List of Track objects
         """
 
-        for idx in reversed(range(len(bbox))):    # 过滤置信度低于预设阈值的目标
+        for idx in reversed(range(len(bbox))):    # 过滤置信度低于预设阈值的目标（从后往前）
             if bbox[idx]["confidence"] < self.minConfidence:
                 del bbox[idx]
                 del detections[idx]
@@ -255,7 +255,7 @@ class Tracker:
         for t in self.tracks:
             if verbose:
                 print("ID {} - Kill Count {}".format(t.id, t.killCount))
-            t.killCount += 1
+            t.killCount += 1    # 掉帧数+1
         
         # Construct cost matrix    计算代价矩阵
         costM = self.pairwiseDistance(detections, self.tracks)
@@ -265,23 +265,23 @@ class Tracker:
         matches = [(row_ind[i], col_ind[i]) for i in range(row_ind.shape[0])]
         
         killedTracks = []
-        for (mRow, pCol) in matches:
+        for (mRow, pCol) in matches:    # 遍历每个配对
             ## If the assignment cost is below the Ghost threshold, then update the existing tracklet    如果配对代价低于鬼影阈值，则更新至已有轨迹
             if(costM[mRow][pCol] < self.ghostThreshold):
                 # Update existing track with measurement
                 p = np.array(detections[mRow].pt)
-                self.tracks[pCol].pos.append(p)
-                self.tracks[pCol].bbox.append(self.convertBBoxtoList(bbox[mRow]))
-                self.tracks[pCol].M = self.matrixInverse(bbox[mRow]["cov"])
-                self.tracks[pCol].mean = bbox[mRow]["mean"]
-                self.tracks[pCol].frame.append(frameNumber)
+                self.tracks[pCol].pos.append(p)    #向轨迹坐标点添加
+                self.tracks[pCol].bbox.append(self.convertBBoxtoList(bbox[mRow]))    # 把bbox格式转为list 并添加进bbox
+                self.tracks[pCol].M = self.matrixInverse(bbox[mRow]["cov"])    # 求协方差矩阵的逆
+                self.tracks[pCol].mean = bbox[mRow]["mean"]    # 添加均值
+                self.tracks[pCol].frame.append(frameNumber)    # 添加帧号
                 self.tracks[pCol].killCount = 0     # 若有更新则killCount置为0
                 
             ## If the cost assignment is higher than the ghost threshold, then either create a new track or kill an old one    高于鬼影阈值
             else:
                 # A new track is created if the following is true:    会新创建一条track的情况
                 # 1) The cost (L2 distance) is higher than the ghost threshold    欧氏距离大于鬼影阈值
-                # 2) It is an actual detection (mRow < numNew)   numNew = 检测数  检测的目标是真的
+                # 2) It is an actual detection (mRow < numNew)   numNew = 检测数  最匹配配对中的目标是真的
                 if(mRow < numNew):
                     # Create new track
                     newTrack = Track()
@@ -299,7 +299,7 @@ class Tracker:
                         print("Num tracks: {}".format(len(self.tracks)))
                 
                 # The track is deleted if the following is true:    
-                # 1) The assigned detection is a dummy detection (mRow >= numNew),    
+                # 1) The assigned detection is a dummy detection (mRow >= numNew),    最匹配配对中的目标是填补的 
                 # 2) There are more tracks than detections (numOld > numNew)    轨迹数大于检测数
                 # 3) The assigned track is a real track (pCol < numOld)    被匹配的轨迹是真的    即掉帧！！！
                 elif(numOld > numNew and pCol < numOld):
@@ -368,7 +368,7 @@ def readDetectionCSV(df, downsample):
     kps = []
     bbs = []
     counter = 0
-    for i, row in df.iterrows():
+    for i, row in df.iterrows():    # 全部下采样
         bb = {"tl_x": row["tl_x"] / downsample,
               "tl_y": row["tl_y"] / downsample, 
               "c_x": row["c_x"] / downsample,
@@ -407,7 +407,7 @@ def readDetectionCSV(df, downsample):
     return kps, bbs
 
 def saveTrackCSV(allTracks, folder, csvFilename, frameCount):
-    df = tracks2Dataframe(allTracks)
+    df = tracks2Dataframe(allTracks)    # 全部上采样
     df['x'] *= det.downsample
     df['y'] *= det.downsample
     df['tl_x'] *= det.downsample
@@ -431,7 +431,7 @@ def saveTrackCSV(allTracks, folder, csvFilename, frameCount):
     df.to_csv(outputPath)
 
 
-def videoTracking(path, camId, det, df_fish, video, preDet):
+def videoTracking(path, camId, det, df_fish, video, preDet):    # 视频跟踪
     vidPath = os.path.join(path, 'cam{0}.mp4'.format(camId))
     
     cap = cv2.VideoCapture(vidPath)
@@ -459,23 +459,23 @@ def videoTracking(path, camId, det, df_fish, video, preDet):
         if (ret):
 
             ## Detect keypoints in the frame, and draw them
-            if not preDet or video:
-                kps, bbs = det.detect(frame)
+            if not preDet or video:    # 若非预检测 
+                kps, bbs = det.detect(frame)    
             
-            if preDet:
+            if preDet:    # 若有预检测
                 if df_counter >= len(df_fish):
                     break
 
                 fish_row = df_fish.loc[(df_fish['frame'] == frameCount)]    
                 if len(fish_row) == 0:
                     continue
-                kps, bbs = readDetectionCSV(fish_row, det.downsample)
+                kps, bbs = readDetectionCSV(fish_row, det.downsample)    # 读入CSV
                 df_counter += len(fish_row)
 
-            # Associate new detections with tracklets, and potentially create new/kill old tracklets
+            # Associate new detections with tracklets, and potentially create new/kill old tracklets    # 创建或删除轨迹
             tra.recognise(frameCount, kps, bbs)
             
-            if video:
+            if video:    # 是否显示
                 frame = cv2.drawKeypoints(det.frame, kps, None, (255,0,0), 4)
                 t = tra.tracks
                 if t is not None:
@@ -483,8 +483,8 @@ def videoTracking(path, camId, det, df_fish, video, preDet):
                         if i.pos:                        
                             ## Draw line of the tracklet and draw the keypoints again
                             pos = (int(i.pos[len(i.pos)-1][0]),int(i.pos[len(i.pos)-1][1]))
-                            frame = drawline(i,frame)
-                            frame = cv2.drawKeypoints(frame, kps, None, (0,255,0), 4)
+                            frame = drawline(i,frame)    # 画线
+                            frame = cv2.drawKeypoints(frame, kps, None, (0,255,0), 4)    # 画点
                 
                 ## Draw the skeletons        
                 frame[(det.thin),0]=0
@@ -493,7 +493,7 @@ def videoTracking(path, camId, det, df_fish, video, preDet):
                 cv2.imshow("Frame",frame)
 
         else:
-            if(frameCount > 1000):
+            if(frameCount > 1000):    #大于1000帧就跳出
                 break
             else:
                 continue
@@ -587,7 +587,7 @@ def csvTracking(path, camId, det, df_fish):
     # Prepare tracker
     tra = Tracker(path, camId)       
     
-    frameList = np.linspace(df_fish["frame"].min(), df_fish["frame"].max(), df_fish["frame"].max() - df_fish["frame"].min() + 1, True, dtype=np.int)
+    frameList = np.linspace(df_fish["frame"].min(), df_fish["frame"].max(), df_fish["frame"].max() - df_fish["frame"].min() + 1, True, dtype=np.int)    # 等差数列
 
     for frameCount in frameList:
         #print("Frame: {0}".format(frameCount))        
