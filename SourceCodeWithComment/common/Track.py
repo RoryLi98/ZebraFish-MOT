@@ -179,9 +179,9 @@ class Track:
 
         ndim = self.tl_x.ndim
         
-        if ndim == 1 or cam is None:
+        if ndim == 1 or cam is None:    # cam is None 或着 维度为1
             cam_frame = self.cam_frame[self.frame == frameNumber]
-        elif ndim == 2 and cam is not None:
+        elif ndim == 2 and cam is not None:    # cam is not None 或者 维度为2
             camInd = cam-1
             cam_frame = self.cam_frame[camInd, self.frame == frameNumber]
         else:

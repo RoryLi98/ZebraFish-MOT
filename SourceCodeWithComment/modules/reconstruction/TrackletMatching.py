@@ -191,8 +191,8 @@ class TrackletMatcher:    # 2D -> 3D
         track3d.cam2bbox = []
         track3d.cam1frame = []
         track3d.cam2frame = []
-        track3d.cam1Parent = track1
-        track3d.cam2Parent = track2
+        track3d.cam1Parent = track1    # 存入cam1的2D轨迹实例
+        track3d.cam2Parent = track2    # 存入cam2的2D轨迹实例
         
         frameList = []
         
@@ -218,11 +218,11 @@ class TrackletMatcher:    # 2D -> 3D
             track3d.cam2bbox.append(track2.getBoundingBox(f))
             track3d.cam1frame.append(track1.getVideoFrame(f))
             track3d.cam2frame.append(track2.getVideoFrame(f))
-            frameList.append(f)
+            frameList.append(f)    # 筛选掉推测点不在鱼缸内的frame
             
         if len(track3d.errors) > 0:
-            track3d.frame = np.array(frameList)  
-            weight = np.median(track3d.errors) * (len(track3d.errors)/len(list(np.union1d(track1.frame, track2.frame))))
+            track3d.frame = np.array(frameList)      # track3d.frame 为 交集的帧号集
+            weight = np.median(track3d.errors) * (len(track3d.errors)/len(list(np.union1d(track1.frame, track2.frame))))    # 权重= errors的中位数 * (errors的长度/t1帧数 ∩ t2帧数）
             return weight,track3d    
         else:
             return 0, None
@@ -254,7 +254,7 @@ class TrackletMatcher:    # 2D -> 3D
         if self.camera2_useHead: 
             cam2_list = ["kpt"]    # FASTER R-CNN-H 只有一个点
 
-        for pt in cam2_list:    # 
+        for pt in cam2_list:    # 若传统，三个点选error最小的点，若FASTER R-CNN-H，则只有一个点
             tr = Triangulate()
         
             t1Pt = track1.getImagePos(frameNumber, "kpt")
@@ -278,12 +278,12 @@ class TrackletMatcher:    # 2D -> 3D
             err2 = np.linalg.norm(pos2-p2)
             err = err1 + err2     # 两视角的重投影误差和
             
-            if err < minErr:    # 计算在 "kpt"/"l""c""r" 模式的最小误差的点
+            if err < minErr:    # 计算在 "kpt" / "l""c""r" 模式的最小误差的点
                 minErr = err
                 minP = p
                 minP1 = p1
                 minP2 = p2
-                minPt = pt
+                minPt = pt    # "kpt" / "l""c""r"
             
         if verbose:
             print("Min error: {}\n\t3D coords: {}\n\tTrack 1: {}\n\tTrack 2: {}\n\tPos1 {} (GT) / {}\n\tPos2 {} (GT) / {}\n\tTrack 2 pt: {}".format(minErr, minP, track1.id, track2.id, pos1, p1, pos2, p2, minPt))
@@ -305,7 +305,7 @@ class TrackletMatcher:    # 2D -> 3D
             t = self.cam1Tracks[tId]
             concurrent = self.findConcurrent(t,self.cam2Tracks)    # 求与该顶视轨迹 有交集的侧视轨迹实例集
             
-            for c in concurrent:
+            for c in concurrent:    # c 是每个track
                 weight,track3d = self.calcMatchWeight(t,c)    # 计算该顶视轨迹 与交集的权重
                 if(weight <= 0.001) or track3d is None:    # 若权重小于0.001 或 track3d 为空，则不创建结点
                   continue
@@ -314,9 +314,9 @@ class TrackletMatcher:    # 2D -> 3D
                                     frames=track3d.frame,
                                     cam1=t.id,
                                     cam2=c.id)
-                self.addToMap(nodeName)    # 加入到
+                self.addToMap(nodeName)    # 加入到Map中，键为id，值为nodeName
 
-                # Save triangulated information
+                # Save triangulated information    3d 实例保存到字典内，键为nodeName，值为3d轨迹实例
                 self.triangulated[nodeName] = track3d
                 
                 if verbose:
@@ -337,12 +337,12 @@ class TrackletMatcher:    # 2D -> 3D
             currId = self.graph.nodes[nodeName][key]    # 取得cam1/2的id
             if(currId not in self.camIdMap):    # 若该id不在camIdMap内，则新建键值
                 self.camIdMap[currId] = []
-            self.camIdMap[currId].append(nodeName)    # 将该id添加入camIdMap内 
+            self.camIdMap[currId].append(nodeName)    # 向camIdMap字典，键为该id的值中添加入nodeName
 
 
-    def connectNodes3D(self, verbose=False):
+    def connectNodes3D(self, verbose=False):    # 连接结点
             """
-            Per tracklet goes through and calculates an edge weight between all nodes with the same trackID in its node name
+            Per tracklet goes through and calculates an edge weight between all nodes with the same trackID in its node name    每个id相同的轨迹遍历算出各个结点之间带权边
             This is an attempt to combine tracklets in a view, who is associated with the same tracklet in the other view.
             This way tracklets in the same view can be associated, even though there are frames missing in between
             
@@ -354,25 +354,25 @@ class TrackletMatcher:    # 2D -> 3D
                 verbose: Whether to print information on the nodes connected and their weights.
             """
 
-            for trackId in self.camIdMap:       
-                elements = [e for e in self.camIdMap[trackId]]
+            for trackId in self.camIdMap:     # 遍历camIdMap字典 其中 键为id，值为nodeName
+                elements = [e for e in self.camIdMap[trackId]]     # 键为id，值为nodeName，即取得所有nodeNmae
                     
-                for e1 in elements:
-                    e1Track = self.triangulated[e1]
+                for e1 in elements:    # 遍历每个nodeName
+                    e1Track = self.triangulated[e1]   # 取一个3D 轨迹实例
                     
-                    for e2 in elements:
-                        if(e1 == e2):
+                    for e2 in elements:    # 遍历每个nodeName
+                        if(e1 == e2):    # 若相同则跳过
                             continue
-                        e2Track = self.triangulated[e2]
+                        e2Track = self.triangulated[e2]    # 取另一个3D 轨迹实例
                         
-                        frameDiff = e2Track.frame[0]-e1Track.frame[-1]
-                        posDiff = np.linalg.norm(e1Track.positions3d[-1]-e2Track.positions3d[0])
+                        frameDiff = e2Track.frame[0]-e1Track.frame[-1]    # 求 e1最后一帧 至 e2第一帧的时间距离
+                        posDiff = np.linalg.norm(e1Track.positions3d[-1]-e2Track.positions3d[0])    # 求 e1最后一帧坐标 至 e2第一帧坐标 空间距离
 
-                        overlap3D = (e2Track.frame[0]-e1Track.frame[-1]) <= 0
+                        overlap3D = (e2Track.frame[0]-e1Track.frame[-1]) <= 0    # overlap3D 为3D重叠标志位
                         
-                        overlap2D = False
+                        overlap2D = False    # 只要有一个视角轨迹是重叠的，则 overlap2D 2D重叠标志位置为True
                         if "cam1" in trackId:
-                            overlap2D = (e2Track.cam2frame[0]-e1Track.cam2frame[-1]) <= 0
+                            overlap2D = (e2Track.cam2frame[0]-e1Track.cam2frame[-1]) <= 0 
                         if "cam2" in trackId:
                             overlap2D = (e2Track.cam1frame[0]-e1Track.cam1frame[-1]) <= 0
 
@@ -381,38 +381,38 @@ class TrackletMatcher:    # 2D -> 3D
                         
                         ## If the tracklets start and ends frames differ too much, ignore it
                         if overlap3D or overlap2D or self.graph.has_edge(e1, e2) or self.graph.has_edge(e2, e1): # Check that the tracklets does not temporally overlap, and that there is not already an edge in the DAG between the two tracklets
-                            continue
+                            continue    # 若 3D重叠/2D重叠/两个轨迹结点已经存在边
 
                         frameDiff = abs(frameDiff)
 
-                        ## calculate Euclidean distance between the tracklet end/start points            
-                        if frameDiff != 0:
-                            speed = posDiff/(frameDiff/self.FPS)
+                        ## calculate Euclidean distance between the tracklet end/start points    计算轨迹起始点到终点的欧氏距离        
+                        if frameDiff != 0:    # 时间距离不等于0
+                            speed = posDiff/(frameDiff/self.FPS)    # 速度 = 空间距离/(时间距离(帧数)/FPS)
                         else:
                             speed = 0.0
 
-                        ## Calculate a weight value based on the inverse exp CDF that penalises a large distance
-                        moveProb = (1.0-scipy.stats.expon.cdf(speed, scale=self.movErrMean+self.movErrStd)) * np.exp(-frameDiff/self.temporalPenalty)
+                        ## Calculate a weight value based on the inverse exp CDF that penalises a large distance    计算结点之间的权值
+                        moveProb = (1.0-scipy.stats.expon.cdf(speed, scale=self.movErrMean+self.movErrStd)) * np.exp(-frameDiff/self.temporalPenalty)    # 速度 时间距离 惩罚
 
                         dist = self.graph.nodes[e1]['weight'] + self.graph.nodes[e2]['weight']
-                        dist *= moveProb
+                        dist *= moveProb    # 距离等于 （e1的权值+e2的权值）* moveProb
 
                         if verbose:
                             print("\nEdge: {0} to {1} with weight: {2}".format(e1,e2, dist))
-                        self.graph.add_edge(e1,e2,weight=dist)
+                        self.graph.add_edge(e1,e2,weight=dist)    # 加边
  
         
 def combine2DTracklets(df, tm):
     
-    ids = df.id.unique() # array containing all unique tracklets ids
-    drop_idx = [] # list to keep track of which indecies are not kept
+    ids = df.id.unique() # array containing all unique tracklets ids    # 包含着所有轨迹ID
+    drop_idx = [] # list to keep track of which indecies are not kept     
     
     # Iterate over each unique ID in the dataframe
     for iID in ids:
-        df_id = df[df.id == iID]  # Sub dataframe, containing all rows relevant for the current ID. Indecies are still that of the main dataframe
+        df_id = df[df.id == iID]  # Sub dataframe, containing all rows relevant for the current ID. Indecies are still that of the main dataframe    取得该ID的行集
         
-        frame_count = df_id["frame"].value_counts()  # How many times does a frame occur in the dataframe
-        dual_assignment =  frame_count[frame_count == 2].sort_index() # isolating the frames with multiple assignments
+        frame_count = df_id["frame"].value_counts()  # How many times does a frame occur in the dataframe    # 计算该轨迹各帧号出现的次数
+        dual_assignment =  frame_count[frame_count == 2].sort_index() # isolating the frames with multiple assignments    # 得出出现两次的帧号并
 
         # GO through each frame with two assignments to the same ID
         for idx, sIdx in enumerate(dual_assignment.items()):
@@ -507,7 +507,7 @@ if __name__ == '__main__':
     tm.connectNodes3D()    # 连接3D结点
 
     csv = pd.DataFrame()
-    mergedCount = 0
+    mergedCount = 0    # 重新编号 3D 轨迹ID
 
     ## While there are still nodes in the graph    当图中仍存在结点
     while(True):
@@ -519,8 +519,8 @@ if __name__ == '__main__':
         length = nx.dag_longest_path_length(tm.graph)    # 返回最长路径长度
 
         allFrames = []
-        for p in path:
-            allFrames += list(tm.triangulated[p].frame)
+        for p in path:    # 遍历最长路径上的结点 p为nodeName
+            allFrames += list(tm.triangulated[p].frame)    # 得到最长路径上的帧号
 
         toBeRemoved = []
         print("Best path:")
@@ -574,7 +574,7 @@ if __name__ == '__main__':
             # not already present in the saved 3D track
             for parent in [track3d.cam1Parent, track3d.cam2Parent]:   
                 for f in parent.frame:
-                    if(f in allFrames):
+                    if(f in allFrames):    # 若遇到重叠的帧号，则跳过
                         continue
                     
                     newRow = pd.DataFrame({
@@ -617,30 +617,30 @@ if __name__ == '__main__':
                         'cam2_aa_h': [-1.0],
                         'cam2_frame': [-1]})
 
-                    # Update cam2 with correct 2D positions
+                    # Update cam2 with correct 2D positions    取侧视图交集的前后十个点来用修正2D坐标
                     pointType = "kpt"
-                    if parent.cam == 2 and not tm.camera2_useHead:
-                        maxTemporalDiff = 10
+                    if parent.cam == 2 and not tm.camera2_useHead:    # 若是侧视且不是 FASTER R-CNN-H == 传统
+                        maxTemporalDiff = 10    # 最大时间距离
                         indToPoint = {0:"l", 1:"c", 2:"r"}
-                        track3DFrames = np.asarray(track3d.frame)
-                        cam2Positions = np.asarray(track3d.cam2positions)
+                        track3DFrames = np.asarray(track3d.frame)    # 交集的帧号集
+                        cam2Positions = np.asarray(track3d.cam2positions)    # 交集的侧视2D坐标
 
                         frameDiff = track3DFrames - f
-                        validFrames = track3DFrames[np.abs(frameDiff) <= maxTemporalDiff]
+                        validFrames = track3DFrames[np.abs(frameDiff) <= maxTemporalDiff]    # 时间距离（帧数）在10及10以内，称为有效帧号
 
                         hist = np.zeros((3))
                         for f_t in validFrames:
-                            ftPoint = np.asarray(cam2Positions[track3DFrames == f_t])
+                            ftPoint = np.asarray(cam2Positions[track3DFrames == f_t])    # 求有效帧号的侧视2D坐标
                             points = np.zeros((3))
-                            points[0] = np.linalg.norm(np.asarray(parent.getImagePos(f, "l")) - ftPoint)
-                            points[1] = np.linalg.norm(np.asarray(parent.getImagePos(f, "c")) - ftPoint)
-                            points[2] = np.linalg.norm(np.asarray(parent.getImagePos(f, "r")) - ftPoint)
-                            hist[np.argmin(points)] += 1
+                            points[0] = np.linalg.norm(np.asarray(parent.getImagePos(f, "l")) - ftPoint)    # 该点至左边缘点的欧氏距离
+                            points[1] = np.linalg.norm(np.asarray(parent.getImagePos(f, "c")) - ftPoint)    # 该点至形心的欧氏距离
+                            points[2] = np.linalg.norm(np.asarray(parent.getImagePos(f, "r")) - ftPoint)    # 该点至右边缘点的欧氏距离
+                            hist[np.argmin(points)] += 1    # 求最小距离，在hist上+1，来统计到底用哪个点来修正
                         
                         if hist.sum() > 0:
-                            pointType = indToPoint[np.argmax(hist)]
+                            pointType = indToPoint[np.argmax(hist)]   # 得到修正的类型
 
-                    newRow['cam{0}_x'.format(parent.cam)] = parent.getImagePos(f, pointType)[0]
+                    newRow['cam{0}_x'.format(parent.cam)] = parent.getImagePos(f, pointType)[0]    # 以下用parent track 来更新为重叠部分的数据
                     newRow['cam{0}_y'.format(parent.cam)] = parent.getImagePos(f, pointType)[1]
                     
                     newRow['cam{0}_tl_x'.format(parent.cam)] = parent.getBoundingBox(f)[0]
@@ -660,16 +660,16 @@ if __name__ == '__main__':
             csv = csv.append(df)
                        
             # Remove used tracklets
-            toBeRemoved.append(p)            
-            cam1 = tm.camIdMap[tm.graph.nodes[p]["cam1"]]
-            cam2 = tm.camIdMap[tm.graph.nodes[p]["cam2"]]
-            for e in (cam1+cam2):
-                if(e not in toBeRemoved):
-                    toBeRemoved.append(e)
+            toBeRemoved.append(p)    # 添加已处理的结点（nodeName）          
+            cam1 = tm.camIdMap[tm.graph.nodes[p]["cam1"]]    # =====
+            cam2 = tm.camIdMap[tm.graph.nodes[p]["cam2"]]    # ====
+            for e in (cam1+cam2):    # ==== 
+                if(e not in toBeRemoved):    # ====
+                    toBeRemoved.append(e)    # ====
         for e in toBeRemoved:
            if(tm.graph.has_node(e)):
-               tm.graph.remove_node(e)
-        mergedCount += 1
+               tm.graph.remove_node(e)    # 移除已处理的点
+        mergedCount += 1    # 处理下一条3D轨迹
         
     csv = csv.sort_values(by=['id', 'frame'], ascending=[True,True])
 
@@ -680,13 +680,13 @@ if __name__ == '__main__':
     csv.reset_index(inplace=True, drop=True)
     csv, drop_idx = combine2DTracklets(csv, tm)
     csv = csv.drop(drop_idx)
-    csv = csv.sort_values(by=['id', 'frame'], ascending=[True,True])
+    csv = csv.sort_values(by=['id', 'frame'], ascending=[True,True])    # 根据ID frame 升序
     
     csv.reset_index(inplace=True, drop=True)
 
     # Find cases where there are several rows for the same frame in a single Tracklet, and determines which ones minimize the 3D distance (and therefore should be kept)
     csv = csv.drop(getDropIndecies(csv, True))
 
-    outputPath = os.path.join(dataPath, 'processed', 'tracklets_3d.csv')
+    outputPath = os.path.join(dataPath, 'processed', 'tracklets_3d.csv')    # 保存
     print("Saving data to: {0}".format(outputPath))
     csv.to_csv(outputPath)
