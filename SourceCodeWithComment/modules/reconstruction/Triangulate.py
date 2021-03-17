@@ -184,7 +184,7 @@ class Triangulate:
             
         Output:
             point: 3D Point where the distance to both ray are minimized and equal    到射线距离最小和相同的3D点
-            dist: The distance between the found point and the rays.    找到的3D点到射线的距离
+            dist: The distance between the found point and the rays.    3D点到射线的距离
         """
         
         if(verbose):

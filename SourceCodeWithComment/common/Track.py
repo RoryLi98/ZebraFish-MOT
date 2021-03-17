@@ -53,7 +53,7 @@ class Track:
         self.patch = None
 
 
-    def getImagePos(self, frameNumber, pt = "kpt", useCamFrame = False):    # 得到某帧的2D图像坐标系的坐标 若有多个即返回第一个元组
+    def getImagePos(self, frameNumber, pt = "kpt", useCamFrame = False):    # 得到某帧的2D图像坐标系的坐标 若有多个坐标即返回第一个元组
         """
         Gets the 2D image coordinates at a specific frame
         If there are several positions at the specified frame, the first instance is returend
@@ -65,21 +65,21 @@ class Track:
             pos: Tuple containing the 2D position, or None if no position is found
         """
         
-        if useCamFrame:
+        if useCamFrame:    # 是否用摄像头的帧号
             compArray = self.cam_frame
         else:
             compArray = self.frame
 
-        if pt == "kpt":
+        if pt == "kpt":    # 是否用关键点（单点） 顶视角/Faster R-CNN-H
             x = self.x[compArray == frameNumber]
             y = self.y[compArray == frameNumber]
-        elif pt == "l":
+        elif pt == "l":    # 左边缘点
             x = self.l_x[compArray == frameNumber]
             y = self.l_y[compArray == frameNumber]
-        elif pt == "c":
+        elif pt == "c":    # 形心
             x = self.c_x[compArray == frameNumber]
             y = self.c_y[compArray == frameNumber]
-        elif pt == "r":
+        elif pt == "r":    # 右边缘点
             x = self.r_x[compArray == frameNumber]
             y = self.r_y[compArray == frameNumber]
         else:
@@ -87,7 +87,7 @@ class Track:
         
         if(x.size == 0 or y.size == 0):
             return None
-        return (x[0],y[0])
+        return (x[0],y[0])    # 只返回第一个元组
 
 
     def getWorldPos(self, frameNumber):

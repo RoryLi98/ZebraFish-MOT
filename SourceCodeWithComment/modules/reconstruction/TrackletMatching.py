@@ -140,13 +140,13 @@ class TrackletMatcher:    # 2D -> 3D
         return True
 
 
-    def findConcurrent(self,track,candidates):    # 求并发的轨迹
+    def findConcurrent(self,track,candidates):    # 求一个轨迹实例内的帧号至另外一个视角全部轨迹的各自帧号有相同帧号的轨迹（返回有着共同帧号的轨迹对象）
         """
         Finds the concurrent tracks (i.e. within the same span of frames) between a specific track and a set of  othertracks 
         
         Input:
-            track: A Track object
-            candidates: List of Track objects
+            track: A Track object    # 一个轨迹实例
+            candidates: List of Track objects    # 列表内是多个轨迹实例
             
         Output:
             concurrent: List of Track objects from candidates that were concurrent with the track argument
@@ -196,7 +196,7 @@ class TrackletMatcher:    # 2D -> 3D
         
         frameList = []
         
-        for f in sorted(frames):           
+        for f in sorted(frames):      # 默认升序
             ## Reproject the tracks
             err,pos3d,cam1reproj,cam2reproj,cam2Pt = self.calcReprojError(f,track1,track2)
             track3d.reproj.append(err)
@@ -204,16 +204,16 @@ class TrackletMatcher:    # 2D -> 3D
             ## Get the weight as the inverted CDF value.    逆累积分布函数
             err = 1-scipy.stats.expon.cdf(err, scale=self.reprojMeanErr)
             
-            if(self.withinAquarium(*pos3d)):
+            if(self.withinAquarium(*pos3d)):    # 点是否在鱼缸
                 track3d.errors.append(err)
             else:
                 continue
                 
             track3d.positions3d.append(pos3d) 
-            track3d.cam1reprojections.append(cam1reproj) 
-            track3d.cam2reprojections.append(cam2reproj) 
-            track3d.cam1positions.append(track1.getImagePos(f)) 
-            track3d.cam2positions.append(track2.getImagePos(f, cam2Pt)) 
+            track3d.cam1reprojections.append(cam1reproj)    # 顶视重投影的坐标
+            track3d.cam2reprojections.append(cam2reproj)    # 侧视重投影的坐标
+            track3d.cam1positions.append(track1.getImagePos(f))    # 顶视的源坐标
+            track3d.cam2positions.append(track2.getImagePos(f, cam2Pt))   # 侧视的源坐标  
             track3d.cam1bbox.append(track1.getBoundingBox(f))
             track3d.cam2bbox.append(track2.getBoundingBox(f))
             track3d.cam1frame.append(track1.getVideoFrame(f))
@@ -228,7 +228,7 @@ class TrackletMatcher:    # 2D -> 3D
             return 0, None
     
     
-    def calcReprojError(self,frameNumber,track1,track2, verbose=False):
+    def calcReprojError(self,frameNumber,track1,track2, verbose=False):    # 计算重投影误差
         """
         Calculates the reprojection error between the provided tracklets at the specified frame
         This is done using a Triangulate object.
@@ -244,17 +244,17 @@ class TrackletMatcher:    # 2D -> 3D
             p1: 2D point of p reprojected onto camera view 1    重投影得到的3D坐标点在视角1的2D坐标
             p2: 2D point of p reprojected onto camera view 2    重投影得到的3D坐标点在视角2的2D坐标
         """
-        minErr = np.inf
+        minErr = np.inf    # 无穷
         minP = None
         minP1 = None
         minP2 = None
         minPt = None
 
-        cam2_list = ["l","c","r"]
-        if self.camera2_useHead:
-            cam2_list = ["kpt"]
+        cam2_list = ["l","c","r"]    # 传统有三个点
+        if self.camera2_useHead: 
+            cam2_list = ["kpt"]    # FASTER R-CNN-H 只有一个点
 
-        for pt in cam2_list:
+        for pt in cam2_list:    # 
             tr = Triangulate()
         
             t1Pt = track1.getImagePos(frameNumber, "kpt")
@@ -266,7 +266,7 @@ class TrackletMatcher:    # 2D -> 3D
                                       t2Pt,
                                       self.cams[track1.cam],
                                       self.cams[track2.cam],
-                                      correctRefraction=True)
+                                      correctRefraction=True)    # 考虑介质不同的折射
         
             p1 = self.cams[track1.cam].forwardprojectPoint(*p)
             p2 = self.cams[track2.cam].forwardprojectPoint(*p)
@@ -276,13 +276,13 @@ class TrackletMatcher:    # 2D -> 3D
             err1 = np.linalg.norm(pos1-p1)
             pos2 = np.array(t2Pt)
             err2 = np.linalg.norm(pos2-p2)
-            err = err1 + err2     
+            err = err1 + err2     # 两视角的重投影误差和
             
-            if err < minErr:
+            if err < minErr:    # 计算在 "kpt"/"l""c""r" 模式的最小误差的点
                 minErr = err
                 minP = p
                 minP1 = p1
-                minP2 = p2    
+                minP2 = p2
                 minPt = pt
             
         if verbose:
@@ -301,20 +301,20 @@ class TrackletMatcher:    # 2D -> 3D
             Verbose: Whether to print information for each node added
         """
         
-        for tId in self.cam1Tracks:
+        for tId in self.cam1Tracks:    # 取顶视内的一个轨迹实例
             t = self.cam1Tracks[tId]
-            concurrent = self.findConcurrent(t,self.cam2Tracks)
+            concurrent = self.findConcurrent(t,self.cam2Tracks)    # 求与该顶视轨迹 有交集的侧视轨迹实例集
             
             for c in concurrent:
-                weight,track3d = self.calcMatchWeight(t,c)
+                weight,track3d = self.calcMatchWeight(t,c)    # 计算该顶视轨迹 与交集的权重
                 if(weight <= 0.001) or track3d is None:    # 若权重小于0.001 或 track3d 为空，则不创建结点
                   continue
-                nodeName = "{0}-{1}".format(t.id,c.id)
-                self.graph.add_node(nodeName, weight=weight,
+                nodeName = "{0}-{1}".format(t.id,c.id)    # 轨迹名为 "{0}-{1}".format(t.id,c.id)
+                self.graph.add_node(nodeName, weight=weight,    # 结点的信息有： 结点名，权重，帧号，cam1中的id，cam2中的id
                                     frames=track3d.frame,
                                     cam1=t.id,
                                     cam2=c.id)
-                self.addToMap(nodeName)
+                self.addToMap(nodeName)    # 加入到
 
                 # Save triangulated information
                 self.triangulated[nodeName] = track3d
@@ -334,10 +334,10 @@ class TrackletMatcher:    # 2D -> 3D
         """
         
         for key in ['cam1','cam2']:
-            currId = self.graph.nodes[nodeName][key]
-            if(currId not in self.camIdMap):
+            currId = self.graph.nodes[nodeName][key]    # 取得cam1/2的id
+            if(currId not in self.camIdMap):    # 若该id不在camIdMap内，则新建键值
                 self.camIdMap[currId] = []
-            self.camIdMap[currId].append(nodeName)     
+            self.camIdMap[currId].append(nodeName)    # 将该id添加入camIdMap内 
 
 
     def connectNodes3D(self, verbose=False):

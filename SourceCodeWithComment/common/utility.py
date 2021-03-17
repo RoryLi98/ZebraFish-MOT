@@ -145,10 +145,10 @@ def csv2Tracks(csv,offset=0,minLen=10,maxFrame=None):     # csv 转 轨迹实例
         ## Load 2D track    列索引中有“cam” 即能判断是2D轨迹
         if('cam' in csv.columns):
             uniqueCams = df_['cam'].unique()
-            for camId in uniqueCams:
-                df2_ = findData(df_,'cam',camId)
+            for camId in uniqueCams:    
+                df2_ = findData(df_,'cam',camId)    # 读'id'=trackId 且 'cam'=camId的行集
 
-                if maxFrame:
+                if maxFrame:    # 可设置最大帧号
                     df2_ = df2_[df2_["frame"] <= maxFrame]
                     if len(df2_) == 0: # If no valid detections left, go to the next tracklet
                         continue
@@ -175,7 +175,7 @@ def csv2Tracks(csv,offset=0,minLen=10,maxFrame=None):     # csv 转 轨迹实例
                 t.aa_tl_y = np.array((df2_.aa_tl_y), dtype=float)
                 t.aa_w = np.array((df2_.aa_w), dtype=float)
                 t.aa_h = np.array((df2_.aa_h), dtype=float)
-                if(len(t.frame) > minLen):
+                if(len(t.frame) > minLen):    # 轨迹帧数大于 预设值才添加入字典，键值为“id{0}_cam{1}”
                     key = "id{0}_cam{1}".format(t.id,t.cam)
                     t.id = key
                     tracks[t.id] = t
@@ -185,7 +185,7 @@ def csv2Tracks(csv,offset=0,minLen=10,maxFrame=None):     # csv 转 轨迹实例
         else:
             ## Load all the triangulated positions as the main track
             t = Track() 
-            filtered = df_[df_['err'] != -1]
+            filtered = df_[df_['err'] != -1]     # 取err = -1 的行集
             t.x = np.array((filtered['3d_x']),dtype=float)
             t.y = np.array((filtered['3d_y']),dtype=float)
             t.z = np.array((filtered['3d_z']),dtype=float)
