@@ -63,7 +63,7 @@ def writeConfig(path, updateValues):
 
 
 
-def findData(df_,*args):
+def findData(df_,*args):    # 搜索满足相应条件的数据
     """
     Used to get data from .csv files
         
@@ -106,9 +106,9 @@ def findData(df_,*args):
     return tmp
 
 
-def csv2Tracks(csv,offset=0,minLen=10,maxFrame=None):    
+def csv2Tracks(csv,offset=0,minLen=10,maxFrame=None):     # csv 转 轨迹实例  有可能是2D轨迹，有可能是3D轨迹
     """
-    Loads all tracks in a CSV file into a dict of tracks, where the key = track id and value = track class
+    Loads all tracks in a CSV file into a dict of tracks, where the key = track id and value = track class    键是轨迹id 值是该轨迹id的实例
     The way the data is loaded depends on whether it is a 2D or 3D track.
     
     It should be noted that when loading a 3D track, if not a parent track, 
@@ -116,33 +116,33 @@ def csv2Tracks(csv,offset=0,minLen=10,maxFrame=None):
     This means the bounding box are then represented as 2D numpy arrays, instead of 1D arrays
     
     Input:
-        csv: String path to csv file which has to be converted
+        csv: String path to csv file which has to be converted    字符串（csv路径）或者 pd.DataFrame
         offset: The amount of offset applied to the frames
-        minLen: The minimum lenght of a tracklet
+        minLen: The minimum lenght of a tracklet    # 最短轨迹阈值
         
     Output:
         tracks: A dict of Track objects
     """
     
-    if(isinstance(csv, str)):
+    if(isinstance(csv, str)):    # 如果是个字符串
         if(not os.path.isfile(csv)):
             print("Error loading tracks. Could not find file: {0}".format(csv))
             return []
-        csv = pd.read_csv(csv)
-    if(isinstance(csv, pd.DataFrame)):
-        uniqueIds = csv['id'].unique()
+        csv = pd.read_csv(csv)    # 读入为pd.DataFrame
+    if(isinstance(csv, pd.DataFrame)):    # 若csv是pd.DataFrame
+        uniqueIds = csv['id'].unique()    # 取不重复的id
     else:
         print("Error loading tracks. 'csv2tracks' expects " +
               "either a Dataframe or path to a CSV file.")
         return []
 
-    uniqueIds = csv['id'].unique()
-    tracks = {}
+    uniqueIds = csv['id'].unique()    # 取不重复的id
+    tracks = {}    # 创建字典
 
-    for trackId in uniqueIds:
-        df_ = findData(csv,'id',trackId)
+    for trackId in uniqueIds:    # 遍历 id
+        df_ = findData(csv,'id',trackId)    # 找到id 为 trackId的行集
         
-        ## Load 2D track
+        ## Load 2D track    列索引中有“cam” 即能判断是2D轨迹
         if('cam' in csv.columns):
             uniqueCams = df_['cam'].unique()
             for camId in uniqueCams:

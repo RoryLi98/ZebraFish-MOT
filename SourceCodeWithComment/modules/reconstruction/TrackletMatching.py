@@ -30,7 +30,7 @@ class TrackletMatcher:    # 2D -> 3D
         # Load settings and data
         self.loadSettings(dataPath)
         self.loadTracklets(dataPath)
-        self.cams = prepareCams(dataPath) # Load camera objects  输入pkl文件路径
+        self.cams = prepareCams(dataPath) # Load camera objects  输入相机pkl文件路径
 
         # Internal stuff
         self.graph = nx.DiGraph()
@@ -61,7 +61,7 @@ class TrackletMatcher:    # 2D -> 3D
         
         # Get tracklet matching parameters
         c = config['TrackletMatcher']
-        self.reprojMeanErr = c.getfloat('reprojection_err_mean')
+        self.reprojMeanErr = c.getfloat('reprojection_err_mean')    
         self.reprojStdErr = c.getfloat('reprojection_err_std')
         self.movErrMean = c.getfloat('movement_err_mean')
         self.movErrStd = c.getfloat('movement_err_std')  
@@ -69,12 +69,12 @@ class TrackletMatcher:    # 2D -> 3D
         self.trackletMinLength = c.getint('tracklet_min_length')
         self.temporalPenalty = c.getint('temporal_penalty')
         self.FPS = c.getint('FPS')
-        self.camera2_useHead = c.getboolean("cam2_head_detector", False)    
+        self.camera2_useHead = c.getboolean("cam2_head_detector", False)    # 是否使用的是FASTER R-CNN H
 
         # Get aquarium size
         c = config['Aquarium']
-        self.maxX = c.getfloat("aquarium_width")
-        self.maxY = c.getfloat("aquarium_depth")
+        self.maxX = c.getfloat("aquarium_width")    # 鱼缸的宽
+        self.maxY = c.getfloat("aquarium_depth")    # 鱼缸的长
         self.maxZ = c.getfloat("aquarium_height", np.inf)
         
         self.minX = c.getfloat("min_aquarium_width", 0.0)
@@ -307,7 +307,7 @@ class TrackletMatcher:    # 2D -> 3D
             
             for c in concurrent:
                 weight,track3d = self.calcMatchWeight(t,c)
-                if(weight <= 0.001) or track3d is None:
+                if(weight <= 0.001) or track3d is None:    # 若权重小于0.001 或 track3d 为空，则不创建结点
                   continue
                 nodeName = "{0}-{1}".format(t.id,c.id)
                 self.graph.add_node(nodeName, weight=weight,
@@ -502,21 +502,21 @@ if __name__ == '__main__':
     else:
         dataPath = args["path"]
 
-    tm = TrackletMatcher(dataPath)
-    tm.createNodes()
-    tm.connectNodes3D()
+    tm = TrackletMatcher(dataPath)    # 创建实例
+    tm.createNodes()    # 创建3D结点
+    tm.connectNodes3D()    # 连接3D结点
 
     csv = pd.DataFrame()
     mergedCount = 0
 
-    ## While there are still nodes in the graph
+    ## While there are still nodes in the graph    当图中仍存在结点
     while(True):
-        if(len(tm.graph.nodes) == 0):
+        if(len(tm.graph.nodes) == 0):    # 结点被清空，则退出
             break
         
         ## Find the largest path through the graph
-        path = nx.dag_longest_path(tm.graph)
-        length = nx.dag_longest_path_length(tm.graph)
+        path = nx.dag_longest_path(tm.graph)    # 返回最长路径
+        length = nx.dag_longest_path_length(tm.graph)    # 返回最长路径长度
 
         allFrames = []
         for p in path:

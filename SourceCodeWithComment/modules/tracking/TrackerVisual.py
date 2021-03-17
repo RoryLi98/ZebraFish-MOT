@@ -292,8 +292,8 @@ class Tracker:
                     newTrack.mean = bbox[mRow]["mean"]
                     newTrack.frame.append(frameNumber)
                     newTrack.id = self.trackCount
-                    self.trackCount += 1
-                    self.tracks.append(newTrack)
+                    self.trackCount += 1    # id + 1
+                    self.tracks.append(newTrack)    # 添加入轨迹集
 
                     if verbose:
                         print("Num tracks: {}".format(len(self.tracks)))
@@ -301,15 +301,15 @@ class Tracker:
                 # The track is deleted if the following is true:    
                 # 1) The assigned detection is a dummy detection (mRow >= numNew),    最匹配配对中的目标是填补的 
                 # 2) There are more tracks than detections (numOld > numNew)    轨迹数大于检测数
-                # 3) The assigned track is a real track (pCol < numOld)    被匹配的轨迹是真的    即掉帧！！！
+                # 3) The assigned track is a real track (pCol < numOld)    被匹配的轨迹是真的  
                 elif(numOld > numNew and pCol < numOld):
-                    if(self.tracks[pCol].killCount > self.maxKillCount):
+                    if(self.tracks[pCol].killCount > self.maxKillCount):    # 是否达到允许错误匹配掉帧上限
                         killedTracks.append(pCol)
 
                         if verbose:
                             print("Num tracks: {}".format(len(self.tracks)))       
         
-        for pCol in sorted(killedTracks, reverse=True):
+        for pCol in sorted(killedTracks, reverse=True):    # 降序
             self.oldTracks.append(self.tracks.pop(pCol))
 
         del(costM)     
