@@ -486,7 +486,7 @@ class TrackFinalizer:    # 插值
         mt.sort()
         
 
-    def addMainTrack(self, mtID):
+    def addMainTrack(self, mtID):    # 将所供的轨迹实例添加进主轨迹   所添加的元素为：该轨迹的id，该轨迹的帧号，该轨迹的3D坐标
         '''
         Takes the provided track and adds to the list of main tracks as a new Track obejct. The 3D position, id and frames are copied over.
 
@@ -519,21 +519,21 @@ class TrackFinalizer:    # 插值
     def rankTrackletTemporally(self, galleryTracks, mainTracks, verbose = True):
         '''
         Goes through all gallery tracks, determine the distance to each main track, and sorts them based on the shortest distance. 
-        If the gallery track overlaps with any main track, it is relagated to the end of the list
+        If the gallery track overlaps with any main track, it is relegated to the end of the list
 
         Input:
-            galleryTracks: List of IDs for the gallery tracks
-            mainTracks: List of IDs for the main tracks
+            galleryTracks: List of IDs for the gallery tracks    副轨迹的id集
+            mainTracks: List of IDs for the main tracks    主轨迹的id集
             verbose: Whether to print information about each track
 
         Output:
-            tempDistList: List of tuples, constructed as (trackID, minimum distance to any main track, track length). The list is sorted by distance, and length for tiebreakers
-            orderedGalleryTracks: List of trackIDs from tempDistList
+            tempDistList: List of tuples, constructed as (trackID, minimum distance to any main track, track length). The list is sorted by distance, and length for tiebreakers    元组（）
+            orderedGalleryTracks: List of trackIDs from tempDistList  
         '''
         tempDistList = []
         
         for gTrack in galleryTracks:
-            gt = self.tracks[gTrack]
+            gt = self.tracks[gTrack]    # 遍历每个副轨迹实例
             
             min_diff = np.inf
             for mTrack in mainTracks:
@@ -564,7 +564,7 @@ class TrackFinalizer:    # 插值
         return tempDistList, orderedGalleryTracks
 
 
-    def checkTrackIntersection(self, mainTrack, galleryTrack):
+    def checkTrackIntersection(self, mainTrack, galleryTrack):    # 检查两轨迹是否有交叠
         '''
         Checks if two tracks are overlapping, and if so returns an integer indicating how.
 
@@ -606,7 +606,7 @@ class TrackFinalizer:    # 插值
 
     def connectTracklets(self, galleryTracks, mainTracks):
         '''
-        Takes N main track seeds, and tries to associate all other tracks to each of these, using a greedy algorithm.
+        Takes N main track seeds, and tries to associate all other tracks to each of these, using a greedy algorithm.    用贪心算法
         This is done using a combination of temporal, spatial, and spatio-temporal distance.
         
         All unassigned tracks are sorted in ascending order based on their closest temporal distance to any main track. If overlapping, they are relegated to the end of the list
@@ -616,8 +616,8 @@ class TrackFinalizer:    # 插值
         If the track is overlapping with all main tracks, then the internal spatio-temporal distance is used, as well as the amount of overlap, and how frames have concurrent detections, and re-id.
 
         Input:
-            galleryTracks: List of IDs of gallery tracks
-            mainTracks: List of IDs of main tracks
+            galleryTracks: List of IDs of gallery tracks    副轨迹中的id
+            mainTracks: List of IDs of main tracks    主轨迹中的id
 
         Output:
             paths: List of lists, consisting of associated IDs
@@ -632,8 +632,8 @@ class TrackFinalizer:    # 插值
         # Create dummy main tracks and assign data
         self.mainTracks = {}
         for mTrack in mainTracks:
-            outputDict[mTrack] = [mTrack]
-            self.addMainTrack(mTrack)
+            outputDict[mTrack] = [mTrack]    # 输出的字典，先备份一遍
+            self.addMainTrack(mTrack)    # id 号加入addMainTrack
         
         while len(galleryTracks) > 0:
 
@@ -752,7 +752,7 @@ class TrackFinalizer:    # 插值
             return (-1,-1)
 
 
-    def findConccurent(self, trackIds, overlaping = True, fully_concurrent = False, verbose = True):
+    def findConccurent(self, trackIds, overlaping = True, fully_concurrent = False, verbose = True):    # 所供的轨迹对象与其他对象的有交集的轨迹对象集
         """
         Finds the concurrent tracks between a specific track and a set of other tracks 
         Can find both partially overlapping and fully concurrent tracklets
@@ -765,64 +765,64 @@ class TrackFinalizer:    # 插值
             concurrent: List of Track objects from candidates that were overlaping with the track argument
         """
         
-        tracks = self.tracks
+        tracks = self.tracks    # 轨迹集
         
         if verbose: 
             print()
             print(trackIds)
         
         concurrent = []
-        for idx1 in range(len(trackIds)):
+        for idx1 in range(len(trackIds)):    # trackIds为被选为主轨迹的id集
             
             track1Id = trackIds[idx1]
-            track1 = tracks[track1Id]
-            if verbose:
+            track1 = tracks[track1Id]    # 取一个轨迹实例
+            if verbose:    # 顺便打印丢失了多少帧
                 print("Track1: {}, fStart {},  fEnd {}, # frames {}, # missing frames {}".format(track1Id, tracks[track1Id].frame[0], tracks[track1Id].frame[-1], len(tracks[track1Id].frame), (tracks[track1Id].frame[-1] - tracks[track1Id].frame[0] + 1) - len(tracks[track1Id].frame)))
             
             assigned = []
             trackList = []
-            for idx2 in range(idx1+1, len(trackIds)):
+            for idx2 in range(idx1+1, len(trackIds)):    # 排列组合中的组合
                 
-                if idx1 == idx2:
+                if idx1 == idx2:    # 相同即跳过
                     continue
                 
                 track2Id = trackIds[idx2]    
-                track2 = tracks[track2Id]
+                track2 = tracks[track2Id]    # 取另一个轨迹实例
                 if verbose:
                     print("Track2: {}, fStart {},  fEnd {}, # frames {}, # missing frames {}".format(track2Id, tracks[track2Id].frame[0], tracks[track2Id].frame[-1], len(tracks[track2Id].frame), (tracks[track2Id].frame[-1] - tracks[track2Id].frame[0] + 1) - len(tracks[track2Id].frame)))
       
-                interCheck = self.checkTrackIntersection(track1, track2)   
+                interCheck = self.checkTrackIntersection(track1, track2)    # 检查两轨迹的重合情况    
 
-                if interCheck == -1:
+                if interCheck == -1:    # 无交叠
                     if verbose:
                         print("Not intersecting ", track1Id, track2Id)
                     ## If the tracks dont share the same time span
                     continue
                 
-                if not fully_concurrent:
-                    if interCheck == 0:
+                if not fully_concurrent:    # 当fully_concurrent=false时，执行
+                    if interCheck == 0:    # 轨迹2 完全在 轨迹1 内，保留轨迹1
                         ## If track2 is fully in the span of track1. Only track1 is kept
                         assigned.append(track2Id)
                         continue
                     
-                    if interCheck == 1:
+                    if interCheck == 1:    # 轨迹1 完全在 轨迹2 内，保留轨迹2
                         ## If track1 is fully in the span of track2. Only track2 is kept
                         assigned.append(track1Id)
                         continue
                     
-                if not overlaping:
+                if not overlaping:    # 当overlaping=false时，执行
                     if interCheck == 2 or interCheck == 3:
                         continue
                 if verbose:
                     print("\tKept")
-                trackList.append(track2Id)
-                assigned.append(track2Id)
+                trackList.append(track2Id)    # 有交叠则添加
+                assigned.append(track2Id)    # 有交叠则添加
 
-            if track1Id not in assigned:
+            if track1Id not in assigned:    # 若完全交叠不算交叠且轨迹1被轨迹2完全包含时，则把轨迹1也加入
                 trackList.append(track1Id)
                 assigned.append(track1Id)
                 
-            if len(trackList) > 0:
+            if len(trackList) > 0:    # 如果trackList不为空，则添加入concurrent
                 concurrent.append(trackList)
             
             if verbose:
@@ -840,7 +840,7 @@ class TrackFinalizer:    # 插值
         The tracks have to be of a certain length and have a certain amount of detections in them before they are considered.
         The minimum length and number of detections are determined by taking the value of the (N*user_multiple)th top value
 
-        All tracks are then checked for overlap, and all valid cases where N tracks overlap eachother more than a user defined value, are then returned.
+        All tracks are then checked for overlap, and all valid cases where N tracks overlap each other more than a user defined value, are then returned.
             
         Output:
             main_tracks: A list of lists containing the set of main track IDs which can be used as seeds
@@ -849,37 +849,37 @@ class TrackFinalizer:    # 插值
         detections = []
         length = []
         ids = []
-        for tr in self.tracks:
-            track = self.tracks[tr]
-            ids.append(tr)
-            detections.append(len(track.frame))
-            length.append(len(np.linspace(track.frame[0], track.frame[-1], track.frame[-1]-track.frame[0] + 1, dtype=np.int)))
+        for tr in self.tracks:    # self.tracks为字典
+            track = self.tracks[tr]    # 取键为tr的对象
+            ids.append(tr)    # 添加id
+            detections.append(len(track.frame))    # 添加track.frame的长度
+            length.append(len(np.linspace(track.frame[0], track.frame[-1], track.frame[-1]-track.frame[0] + 1, dtype=np.int)))    # 添加从起始帧至结尾帧的长度
 
             print("Track {}: Start {}, End {}, Length {}, Detections {}".format(tr, track.frame[0], track.frame[-1], length[-1], detections[-1]))
 
-        sorted_length = sorted(length)
-        sorted_detections = sorted(detections)
+        sorted_length = sorted(length)    # 排序各个轨迹长度 （升序）
+        sorted_detections = sorted(detections)    # 排序各个轨迹检测数 （升序）
 
-        candidateN = min(len(self.tracks), self.n_fish*self.main_track_search_multiple)
-        candidateN = len(self.tracks)
+        candidateN = min(len(self.tracks), self.n_fish*self.main_track_search_multiple)    # 没用上，我傻了    （用于搜索主轨迹）
+        candidateN = len(self.tracks)    
         
         min_length = sorted_length[-candidateN]
         min_detections = sorted_detections[-candidateN]
 
-        min_overlap = 1#min_length * self.min_main_overlap
+        min_overlap = 1 #min_length * self.min_main_overlap    #我傻了，有两个可以用的值
 
         print("Minimum tracklet length {}".format(min_length))
         print("Minimum tracklet detections {}".format(min_detections))
         print("Minimum tracklet overlap {}".format(min_overlap))
 
         main_tracks_init = []
-        for idx in range(len(self.tracks)):
-            if length[idx] >= min_length and detections[idx] >= min_detections:
-                main_tracks_init.append(ids[idx])
+        for idx in range(len(self.tracks)):    # 遍历 len(self.tracks)个数
+            if length[idx] >= min_length and detections[idx] >= min_detections:   # 若满足该条件，则加入主轨迹集
+                main_tracks_init.append(ids[idx])    # 添加该轨迹id
 
         # find which of the initially selected tracks are concurrent
-        concurrent_tracks = self.findConccurent(main_tracks_init, overlaping = True, fully_concurrent = True, verbose = False)
 
+        concurrent_tracks = self.findConccurent(main_tracks_init, overlaping = True, fully_concurrent = True, verbose = False)     # overlap和fully_concurrent算交集
         # For all set of concurrent tracks go through and see how much they overlap
         main_tracks = []
         overlap_lst = []
@@ -895,8 +895,8 @@ class TrackFinalizer:    # 插值
                 # All tracks should overlap so that e.g. for 3 fish it cannot be 
                 #               |----------------------------------------|
                 #   |-----------------|                      |----------------------------|
-                for comb_set in combinations(conc_set, self.n_fish):
-                    if comb_set in checked_sets:
+                for comb_set in combinations(conc_set, self.n_fish):    # 组合
+                    if comb_set in checked_sets:    # 已经检查过
                         continue
                     else:
                         checked_sets.append(comb_set)
@@ -940,20 +940,20 @@ class TrackFinalizer:    # 插值
     ### Main Function
     def matchAll(self, tracks, verbose=True):
         """
-        Matches all tracklets by using the proposed greedy association algorithm.
+        Matches all tracklets by using the proposed greedy association algorithm.    用贪心算法匹配所有轨迹
         Currently uses N_fish "certain" tracklets, and then tries to associate all other trackelts to these.
         
         Input:
-            tracks: Dict of Track objects
+            tracks: Dict of Track objects    # 轨迹对象字典
             verbose: Whether to print information  
             
         Output:
-            paths: A list of lists containing the associated tracks by their IDs
+            paths: A list of lists containing the associated tracks by their IDs    
         """
         
-        self.tracks = tracks
+        self.tracks = tracks    # 赋值入类内
         
-        ## Find main and gallery tracks
+        ## Find main and gallery tracks    找到主轨迹和副轨迹
         mainTracks_all = self.findMainTracks()
         
         if len(mainTracks_all) == 0:
@@ -961,10 +961,10 @@ class TrackFinalizer:    # 插值
         
         paths = []
 
-        for mainTracks in mainTracks_all:
+        for mainTracks in mainTracks_all:     # 遍历每个主轨迹
             galleryTracks = []
             for track in tracks:
-                if self.tracks[track].id not in mainTracks:
+                if self.tracks[track].id not in mainTracks:    # 根据id是否在mainTracks里，分成两类：主轨迹和副轨迹
                     galleryTracks.append(self.tracks[track].id)
             
             print("Main tracks: {}".format(mainTracks))
@@ -984,7 +984,7 @@ class TrackFinalizer:    # 插值
 
         if len(paths) > 1:
             for idx1 in range(self.n_fish):
-                for idx2 in range(idx1, self.n_fish):
+                for idx2 in range(idx1, self.n_fish):    # idx2 肯定在idx1 后
                     for idx3 in range(self.n_fish):
                         if paths[idx1][idx3] != paths[idx2][idx3]:
                             print("ERROR {}-{}-{} / {}-{}-{}".format(idx1, idx3, paths[idx1][idx3], idx2, idx3, paths[idx2][idx3]))
@@ -1154,7 +1154,7 @@ if __name__ == '__main__':
     tracks = csv2Tracks(os.path.join(dataPath,'processed/tracklets_3d.csv'),offset=0,minLen=5)
     oldCsv = pd.read_csv(os.path.join(dataPath,'processed/tracklets_3d.csv'), index_col=0)
     
-    tf = TrackFinalizer(dataPath) 
+    tf = TrackFinalizer(dataPath)    # 生成最终匹配类
 
     # Link tracklets if necessary
     if(len(tracks) > tf.n_fish):    # 轨迹数大于鱼的数量

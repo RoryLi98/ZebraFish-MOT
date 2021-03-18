@@ -306,7 +306,7 @@ class TrackletMatcher:    # 2D -> 3D
             concurrent = self.findConcurrent(t,self.cam2Tracks)    # 求与该顶视轨迹 有交集的侧视轨迹实例集
             
             for c in concurrent:    # c 是每个track
-                weight,track3d = self.calcMatchWeight(t,c)    # 计算该顶视轨迹 与交集的权重
+                weight,track3d = self.calcMatchWeight(t,c)    # 计算该顶视轨迹 与侧视轨迹交集 的权重
                 if(weight <= 0.001) or track3d is None:    # 若权重小于0.001 或 track3d 为空，则不创建结点
                   continue
                 nodeName = "{0}-{1}".format(t.id,c.id)    # 轨迹名为 "{0}-{1}".format(t.id,c.id)
@@ -334,7 +334,7 @@ class TrackletMatcher:    # 2D -> 3D
         """
         
         for key in ['cam1','cam2']:
-            currId = self.graph.nodes[nodeName][key]    # 取得cam1/2的id
+            currId = self.graph.nodes[nodeName][key]    # 取得该结点 cam1/2的id
             if(currId not in self.camIdMap):    # 若该id不在camIdMap内，则新建键值
                 self.camIdMap[currId] = []
             self.camIdMap[currId].append(nodeName)    # 向camIdMap字典，键为该id的值中添加入nodeName
