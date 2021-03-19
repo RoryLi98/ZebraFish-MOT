@@ -264,7 +264,7 @@ class TrackFinalizer:    # 插值
             intersection_ratio: intersecting_frames as a ratio of the length of the gallery track    交叠率
             internalTemporalDist: Mean temporal distance when combining two overlapping tracks    
             internalSpatialDist: Mean spatial distance when combining two overlapping tracks    
-            trackIndecies: Dict of indecies, idnicating which detections from each track should be used, in case of overlapping tracks
+            trackIndecies: Dict of indecies, idnicating which detections from each track should be used, in case of overlapping tracks    索引字典 那些
             trackOrder: Temporal order of tracks
             validTrack: Whether the track is valid i.e. whether all values are within user defiend thresholds    是否为有效的轨迹 是否在用户设置的阈值之间
         '''
@@ -283,8 +283,8 @@ class TrackFinalizer:    # 插值
         # If tracks are overlapping, get internal spatio-temporal distances. Else set to invalid values    若轨迹有交叠
         if temporalShift == -1:    # 有交叠
             internalSpatialDistM, internalTemporalDistM, trackIndecies = self.getInternalDistances(mt, gt) # trackIndecies = 字典 id：[True, True, False, True, False, False, True, True, False]
-            internalSpatialDist = np.mean(internalSpatialDistM)    # 平均 空间误差
-            internalTemporalDist = np.mean(internalTemporalDistM)    # 平均 时间误差
+            internalSpatialDist = np.mean(internalSpatialDistM)    # 平均 内空间误差
+            internalTemporalDist = np.mean(internalTemporalDistM)    # 平均 内时间误差
         else:    # 无交叠
             internalSpatialDist = -1
             internalTemporalDist = -1
@@ -455,7 +455,7 @@ class TrackFinalizer:    # 插值
     
 
     ### Tracklet association code
-    def combineTracklets(self, mainTrackID, galleryTrackID, indecies):
+    def combineTracklets(self, mainTrackID, galleryTrackID, indecies):     # 轨迹关联
         '''
         Takes two Tracks and combine them into a single track. Used when having to merge a gallery track with a main track
         The 3D position, frames, and features/labels are combined.
@@ -469,11 +469,11 @@ class TrackFinalizer:    # 插值
             No output
         '''
 
-        mt = self.mainTracks[mainTrackID]
-        gt = self.tracks[galleryTrackID]
+        mt = self.mainTracks[mainTrackID]    # 主轨迹实例
+        gt = self.tracks[galleryTrackID]    # 副轨迹实例
 
-        mt_indecies = indecies[mt.id]
-        gt_indecies = indecies[gt.id]
+        mt_indecies = indecies[mt.id]    # 主轨迹实例T/F索引
+        gt_indecies = indecies[gt.id]    # 副轨迹实例T/F索引
 
         mt_frames = mt.frame[mt_indecies]
         gt_frames = gt.frame[gt_indecies]
@@ -635,7 +635,7 @@ class TrackFinalizer:    # 插值
             outputDict[mTrack] = [mTrack]    # 输出的字典，先备份一遍
             self.addMainTrack(mTrack)    # 将mTrack加入至mainTracks    键为ID，元素有：该轨迹的id，该轨迹的帧号，该轨迹的3D坐标
         
-        while len(galleryTracks) > 0:
+        while len(galleryTracks) > 0:    # 将全部galleryTracks匹配完
 
             ## Find next gallery track
             tempDistList, galleryTracks = self.rankTrackletTemporally(galleryTracks, mainTracks)    # 列表元组：（副轨迹的id，最短距离，长度）  列表：副轨迹的id
@@ -675,12 +675,12 @@ class TrackFinalizer:    # 插值
             
             assigned, mtID = self.costAssignment(tDistm, sDistm, iFramesm, iFramesRatiom, iTDistm, iSDistm)
 
-            if assigned:
+            if assigned:    # 有成功配对
                 print("Adding gallery track {} to main track {}".format(gTrack, mainTracks[mtID]))
-                assignLog.append("Gallery {} - Assigned to main track {}".format(gTrack, mainTracks[mtID]))
+                assignLog.append("Gallery {} - Assigned to main track {}".format(gTrack, mainTracks[mtID]))    # 将副轨迹加入至主轨迹
             else:
-                assignLog.append("Gallery {} - Equal Prob".format(gTrack))
-                notAssigned.append(gTrack)
+                assignLog.append("Gallery {} - Equal Prob".format(gTrack))    # 等可能
+                notAssigned.append(gTrack)    # 添加进未分配的副轨迹序列
                 continue      
             
             self.combineTracklets(mainTracks[mtID], gTrack, validIndecies[mtID])
@@ -690,22 +690,22 @@ class TrackFinalizer:    # 插值
         
         ## Statistics of the constructed main tracks
         for mTrack in mainTracks:
-            mt = self.mainTracks[mTrack]
+            mt = self.mainTracks[mTrack]    # 遍历主轨迹实例
             gap = []
             sDist = []
             for i in range(1, len(mt.frame)):
-                diff = mt.frame[i] - mt.frame[i-1]
+                diff = mt.frame[i] - mt.frame[i-1]    # 有效帧间距离
         
-                t1 = self.frameTo3DCoord(mt, i)
-                t2 = self.frameTo3DCoord(mt, i-1)
+                t1 = self.frameTo3DCoord(mt, i)    
+                t2 = self.frameTo3DCoord(mt, i-1)    
                 
-                sDist.append(np.linalg.norm(t1-t2))
+                sDist.append(np.linalg.norm(t1-t2))    # 有效的帧间坐标空间距离
 
-                if sDist[-1] == 0:
-                    if mt.frame[i] == mt.frame[i-1]:
+                if sDist[-1] == 0:    # 列表最后一帧间距离为0时
+                    if mt.frame[i] == mt.frame[i-1]:    # 若当前帧与上一帧相等
                         print(mt.frame[i], mt.frame[i-1])
 
-                if diff > 1:
+                if diff > 1:    # 帧间距离大于1时添加
                     gap.append(diff)
             
             print("Main Track {}:".format(mTrack))
@@ -715,10 +715,10 @@ class TrackFinalizer:    # 插值
             if len(sDist) > 0:
                 print("\tLargest Dist {} - Mean Dist {} - Median Dist {} - Std Dev Dist {} - Max Dist {} - Min Dist {}\n".format(np.max(sDist), np.mean(sDist), np.median(sDist), np.std(sDist), np.max(sDist), np.min(sDist)))
 
-        with open(os.path.join(self.path, "processed", "assigned.txt"), "w") as f:
+        with open(os.path.join(self.path, "processed", "assigned.txt"), "w") as f:    # 分配写入log
             f.write("\n".join(assignLog))
 
-        if notAssigned:
+        if notAssigned:    # 若等概率/无有效的主轨迹，则无分配
             na_len = []
             na_ids = []
             for naTrack in notAssigned:
@@ -729,7 +729,7 @@ class TrackFinalizer:    # 插值
 
         paths = []
         for key in outputDict:
-            paths.append(outputDict[key])
+            paths.append(outputDict[key])    # 字典去掉了id，返回n_fish数量个track
         
         return paths
 
@@ -975,8 +975,8 @@ class TrackFinalizer:    # 插值
             
             full_tracks = self.connectTracklets(galleryTracks.copy(), mainTracks.copy())
 
-            for idx in range(self.n_fish):
-                full_tracks[idx] = sorted(full_tracks[idx])
+            for idx in range(self.n_fish):    # 遍历该主轨迹
+                full_tracks[idx] = sorted(full_tracks[idx])    # 对每个主序列排序
 
             paths.append(full_tracks)
         
