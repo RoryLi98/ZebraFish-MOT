@@ -849,7 +849,7 @@ class TrackFinalizer:    # 插值
         detections = []
         length = []
         ids = []
-        for tr in self.tracks:    # self.tracks为字典
+        for tr in self.tracks:    # 遍历每个self.tracks为字典    记录id，记录有检测的帧数，记录起始到结尾的长度
             track = self.tracks[tr]    # 取键为tr的对象
             ids.append(tr)    # 添加id
             detections.append(len(track.frame))    # 添加track.frame的长度
@@ -857,14 +857,14 @@ class TrackFinalizer:    # 插值
 
             print("Track {}: Start {}, End {}, Length {}, Detections {}".format(tr, track.frame[0], track.frame[-1], length[-1], detections[-1]))
 
-        sorted_length = sorted(length)    # 排序各个轨迹长度 （升序）
-        sorted_detections = sorted(detections)    # 排序各个轨迹检测数 （升序）
+        sorted_length = sorted(length)    # 排序各个轨迹长度 （升序）    各自排序
+        sorted_detections = sorted(detections)    # 排序各个轨迹检测数 （升序）    各自排序
 
         candidateN = min(len(self.tracks), self.n_fish*self.main_track_search_multiple)    # 没用上，我傻了    （用于搜索主轨迹）
         candidateN = len(self.tracks)    
         
-        min_length = sorted_length[-candidateN]
-        min_detections = sorted_detections[-candidateN]
+        min_length = sorted_length[-candidateN]    # 倒数取数，为最小长度
+        min_detections = sorted_detections[-candidateN]   # 倒数取数，为最小检测到的帧数
 
         min_overlap = 1 #min_length * self.min_main_overlap    #我傻了，有两个可以用的值
 
@@ -930,8 +930,8 @@ class TrackFinalizer:    # 插值
                         main_tracks.append(list(sorted(comb_set)))
                         overlap_lst.append(np.median(med_overlap))
         if len(overlap_lst) > 0:
-            sort = np.argmax(overlap_lst)
-            return [main_tracks[sort]]
+            sort = np.argmax(overlap_lst)    #
+            return [main_tracks[sort]]    # 返回列表，列表内有个
         else:
             return []
 
@@ -997,7 +997,7 @@ def updateIds(df, paths, verbose=True):
     Updates the ids of the tracks in a pandas dataframe according to the linked paths
     
     Input:
-        df: A pandas dataframe, consisting of the output of TrackletMatching.py
+        df: A pandas dataframe, consisting of the output of TrackletMatching.py    二维->三维的文件
         paths: A list of lists containing the linked paths
         verbose: Whether to print information per path
         
@@ -1006,22 +1006,22 @@ def updateIds(df, paths, verbose=True):
     
     """
     
-    linked = pd.DataFrame()
+    linked = pd.DataFrame()    # 初始化新路径
     newTracksCount = 0
 
-    # Loop through all paths
+    # Loop through all paths    遍历所有路径
     for path in paths:
         if(verbose):
             print("Path: ", path)
             
         # Loop through each element in the current path
         for e in path:
-            currTracklet = df[df['id'] == e].copy()
-            currTracklet['id'] = newTracksCount
+            currTracklet = df[df['id'] == e].copy()    # 添加 id == 路径上id的行
+            currTracklet['id'] = newTracksCount    # 给路径上数据新赋值 id
             linked = linked.append(currTracklet)        
-        newTracksCount += 1
+        newTracksCount += 1    # 新赋值id +1
         
-    linked = linked.sort_values(by=['id', 'frame'], ascending=[True,True])
+    linked = linked.sort_values(by=['id', 'frame'], ascending=[True,True])    # 排序更新过id的df
     return linked
 
 
@@ -1158,16 +1158,16 @@ if __name__ == '__main__':
 
     # Link tracklets if necessary
     if(len(tracks) > tf.n_fish):    # 轨迹数大于鱼的数量
-        linkedPaths = tf.matchAll(tracks)
+        linkedPaths = tf.matchAll(tracks)    # 即需要匹配
 
         # Update ids in old csv file according to linked paths
-        linkedCsv = updateIds(oldCsv,linkedPaths)
+        linkedCsv = updateIds(oldCsv,linkedPaths)    # 更新ID号
     elif len(tracks) == tf.n_fish:    # 轨迹数等于鱼的数量
         print("There are exactly {} 3D tracklets. These are saved as the final 3D tracks".format(tf.n_fish))
-        linkedCsv = oldCsv
+        linkedCsv = oldCsv    # 即无需更新
     else:    #轨迹数小于鱼的数量
         print("Only {} 3D tracklets are present, while there are {} fish. Not enough informaiton to work with".format(len(tracks), tf.n_fish))
-        sys.exit()
+        sys.exit()    # 轨迹数不够，退出返回
 
     # Remove duplicate frame detections in a track    移除重复帧
     linkedCsv.reset_index(inplace=True, drop=True)    # 重置索引 且原地工作（对原数据生效） 丢弃原索引值
