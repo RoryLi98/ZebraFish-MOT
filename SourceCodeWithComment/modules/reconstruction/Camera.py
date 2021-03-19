@@ -42,8 +42,8 @@ class Camera:
             path: path to json file with the intrinsic parameters
             
         Output:
-            K: camera matrix
-            dist: distortion coefficients
+            K: camera matrix    # 相机矩阵
+            dist: distortion coefficients    畸变参数
         """    
         # Load json file
         with open(path) as f:
@@ -57,8 +57,8 @@ class Camera:
         data = json.loads(data)
 
         # Load camera matrix K and distortion coefficients
-        K = np.array(data["K"])
-        dist = np.array(data["Distortion"]).flatten()
+        K = np.array(data["K"])    # 相机矩阵
+        dist = np.array(data["Distortion"]).flatten()    # 畸变参数
         return K, dist
 
     def withinRoi(self, x, y):
@@ -85,7 +85,7 @@ class Camera:
         return True
         
 
-    def backprojectPoint(self, x, y):
+    def backprojectPoint(self, x, y):    # 2D的坐标 转 3D射线
         """
         Backproject 2D point into a 3D ray i.e. finds R = R^-1 K^-1 [x y 1]^T
         
@@ -98,28 +98,28 @@ class Camera:
             ray0:
         """
         
-        if(self.R is None or self.t is None):
+        if(self.R is None or self.t is None):    # 旋转矩阵 与 平移向量
             print("Camera: Error - Extrinsic parameters is needed to back-project a point")
             return
-        if(self.K is None or self.dist is None):
+        if(self.K is None or self.dist is None): # 相机内参 与 畸变参数
             print("Camera: Error - Intrinsic parameters is needed to back-project a point")
             return
         
         # Calculate R = K^-1 [x y 1]^T and account for distortion
-        ray = cv2.undistortPoints(np.array([[[x,y]]]), self.K, self.dist)
+        ray = cv2.undistortPoints(np.array([[[x,y]]]), self.K, self.dist)    # 去畸变
         ray = ray[0][0] # Unwrap point from array of array
         ray = np.array([ray[0], ray[1], 1.0])
         
         # Calculate R^-1 R
         ray = np.dot(np.linalg.inv(self.rot), ray)
-        ray /= np.linalg.norm(ray)
+        ray /= np.linalg.norm(ray)    # 单位化
 
         # Calculate camera center, i.e. -R^-1 t
         ray0 = self.pos
         return ray, ray0
 
 
-    def forwardprojectPoint(self, x, y, z, correctRefraction=True, verbose=False):
+    def forwardprojectPoint(self, x, y, z, correctRefraction=True, verbose=False):    # 由3D坐标点重投影至相机平面
         """
         Forwards project a 3D point onto the camera plane
         
@@ -213,7 +213,7 @@ class Camera:
         return p3.flatten()
         
 
-    def getExtrinsicMat(self):
+    def getExtrinsicMat(self):    # 得到外参矩阵
         """
         Returns the extrinsic camera matrix i.e. [R | t]
         
@@ -377,7 +377,7 @@ class Camera:
         return camPos.T
 
 
-    def getRotationMat(self):
+    def getRotationMat(self):    # 获取旋转矩阵（旋转向量转旋转矩阵）
         """
         Returns the rotation matrix of the camera
         
@@ -391,7 +391,7 @@ class Camera:
         return cv2.Rodrigues(self.R)[0]
 
 
-    def calcExtrinsicFromJson(self, jsonPath, method=None):
+    def calcExtrinsicFromJson(self, jsonPath, method=None):    # 读Json参数，求解外参
         """
         Find extrinsic parameters for the camera using
         image <--> world reference points from a JSON file
@@ -430,11 +430,11 @@ class Camera:
         else:
             self.calcExtrinsic(worldPoints.astype(float), cameraPoints.astype(float), method=method)
 
-        self.rot = cv2.Rodrigues(self.R)[0]
+        self.rot = cv2.Rodrigues(self.R)[0]    # 将旋转向量转化为旋转矩阵
         self.pos = self.getPosition()
     
     
-    def calcExtrinsic(self, worldPoints, cameraPoints, method=cv2.SOLVEPNP_ITERATIVE):
+    def calcExtrinsic(self, worldPoints, cameraPoints, method=cv2.SOLVEPNP_ITERATIVE):    # 计算外参  世界坐标系 -> 相机坐标系
         """
         Find extrinsic parameters for the camera
         Mainly two methods:
@@ -442,13 +442,13 @@ class Camera:
         See: http://docs.opencv.org/trunk/d9/d0c/group__calib3d.html#ggaf8729b87a4ca8e16b9b0e747de6af27da9f589872a7f7d687dc58294e01ea33a5
         
         Input:
-            worldPoints: World coordinates (x,y,z) in centimeters. Is represented as a 4 x 3 matrix, one of each corner of the aquarium
-            cameraPoints: Camera coordinates in pixels. Is represented as a 4 x 1 x 2 matrix, one of each corner of the aquarium 
-            method: Method to use when calculating extrinsic parameters. Default is cv2.SOLVEPNP_ITERATIVE
+            worldPoints: World coordinates (x,y,z) in centimeters. Is represented as a 4 x 3 matrix, one of each corner of the aquarium    鱼缸角落世界坐标
+            cameraPoints: Camera coordinates in pixels. Is represented as a 4 x 1 x 2 matrix, one of each corner of the aquarium    像素坐标
+            method: Method to use when calculating extrinsic parameters. Default is cv2.SOLVEPNP_ITERATIVE    用什么方法计算
             
         Output:
-            rvec: Rotation vector that together with tvec can transform from world ot camera coordinates
-            tvec: Translation vector that together with rvec can transform from world ot camera coordinates
+            rvec: Rotation vector that together with tvec can transform from world ot camera coordinates    # 旋转矩阵
+            tvec: Translation vector that together with rvec can transform from world ot camera coordinates    # 平移向量
         """
         
         if(self.K is None or self.dist is None):
@@ -460,7 +460,7 @@ class Camera:
             self.R = rvec
             self.t = tvec
             self.plane = Plane(worldPoints)
-            # Ensure that the plane normal points towards the camera
+            # Ensure that the plane normal points towards the camera    # 确保法向向量指向相机
             if(np.dot(self.getPosition(), self.plane.normal) < 0):
                 self.plane.normal = -self.plane.normal
 
@@ -494,48 +494,48 @@ class Plane:
             self.points = points
 
 
-    def calculateNormal(self, points, verbose=False):
+    def calculateNormal(self, points, verbose=False):    # 计算法线方向
         """    
         Calculates the plane normal n = [a b c] and d for the plane: ax + by + cz + d = 0
         
         Input:
-            points: List of 3D points used to calculate the plane
+            points: List of 3D points used to calculate the plane    # 用来计算平面的3D点
             verbose: Whether to write the resulting plane normal and plane
         
         Output:
             n: A numpy vector containing the 3D plane normal
         """
         
-        if(len(points) < 4):
+        if(len(points) < 4):    # 需要四个或者四个以上的点
             print("Error calculating plane normal. 4 or more points needed")
         #Calculate plane normal
         self.x = points[1]-points[2]
-        self.x = self.x/np.linalg.norm(self.x)
+        self.x = self.x/np.linalg.norm(self.x)    # 单位化
         self.y = points[3]-points[2]
-        self.y = self.y/np.linalg.norm(self.y)
-        n = np.cross(self.x,self.y)
-        n /= np.linalg.norm(n)
+        self.y = self.y/np.linalg.norm(self.y)    # 单位化
+        n = np.cross(self.x,self.y)    # 向量叉积
+        n /= np.linalg.norm(n)    # 单位化
         if(verbose):
             print("Plane normal: \n {0} \n plane d: {1}".format(n,d))
         return n
 
 
-    def intersectionWithRay(self, r, r0, verbose=False):
+    def intersectionWithRay(self, r, r0, verbose=False):    # 射线和平面的3D交点
         """    
         Calcuates the intersection between a plane and a ray
         
         Input: 
-            r: Numpy vector containing the ray direction
-            ro: Numpy vector containing a point on the ray
-            verbose: Whether to print information regarding the calculated itnersection
+            r: Numpy vector containing the ray direction    # 射线的方向
+            r0: Numpy vector containing a point on the ray    # 射线上的一点
+            verbose: Whether to print information regarding the calculated intersection
             
         Output:
             intersection: A 3D point indicating the intersection between a ray and plane
         """
         
         n0 = self.points[0]
-        t = np.dot((n0 - r0), self.normal)
-        t /= np.dot(r,self.normal)
+        t = np.dot((n0 - r0), self.normal)    # 由射线上的点 指向points[0]的向量
+        t /= np.dot(r,self.normal)    # 单位化
         intersection = (t * r) + r0
         if(verbose):
             print("t: \n" + str(t))

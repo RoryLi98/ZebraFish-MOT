@@ -1095,8 +1095,7 @@ if __name__ == '__main__':
         bg = bgExt.createBackground()
         cv2.imwrite(bgPath, bg)
 
-    # print(useImages==1)
-    # print("=======================")
+
     # Configure settings for either reading images or the video file.
     if useImages:
         imgPath = os.path.join(path, 'cam{0}'.format(camId))
@@ -1111,7 +1110,7 @@ if __name__ == '__main__':
             print("Could not find image folder {0}".format(imgPath))
             sys.exit()
     else:
-        # print("=======================")
+        
         vidPath = os.path.join(path, 'cam{0}.mp4'.format(camId))
         print("os.path ", vidPath)
         cap = cv2.VideoCapture(vidPath)
