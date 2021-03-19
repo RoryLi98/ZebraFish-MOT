@@ -292,7 +292,7 @@ class TrackFinalizer:    # 插值
                             gt.id: [True]*len(gt.frame)}    # trackIndecies = 字典 id：[True, True, False, True, False, False, True, True, False]
         
         
-        # Check if any of the derived values are outside of the user defiend thresholds    # 是否在用户设置的阈值之间     时间距离 空间距离 交叠的帧数 交叠率
+        # Check if any of the derived values are outside of the user defiend thresholds    # 是否在用户预设的阈值之间     时间距离 空间距离 交叠的帧数 交叠率
         if temporalShift <= self.maxTemporalDiff and spatialDiff <= self.maxSpatialDiff and intersecting_frames <= self.maxIntersectingFrames and intersection_ratio <= self.maxIntersectionRatio:
             validTrack = True    # 有效
         else:
@@ -334,13 +334,13 @@ class TrackFinalizer:    # 插值
             m = metric_dict[key]
             index = m >= 0     # 返回矩阵，元素为True
 
-            if sum(index) > 0 :    #计算 True的个数
+            if sum(index) > 0 :    # 计算 True的个数
                 m_prob = np.zeros_like(m)
                 m_prob[index] = self.calcCost(m[index])
-            else:                  # 
-                m_prob = np.ones(self.n_fish) * 1/self.n_fish    # self.n_fish 维度 各值为 1/self.n_fish 
+            else:                  # 有效个数为零
+                m_prob = np.ones(self.n_fish) * 1/self.n_fish    # self.n_fish 维度 各值为 1/self.n_fish   即等可能
     
-            ## Set invalid values to infinite    # 把其他值设为 无穷∞
+            ## Set invalid values to infinite    # 把负值设为 无穷∞
             m_prob[~index] = np.inf     
 
             res[key] = m_prob
@@ -359,8 +359,8 @@ class TrackFinalizer:    # 插值
         Input:
             tDistm: distance matrix containing temporal distances    # 时间距离矩阵
             sDistm: distance matrix containing spatial distances    # 空间距离矩阵
-            iFramesm: matrix containing amount of concurrent frames between gallery track and each main tracks    # 并发帧数矩阵 ？ 
-            iFramesRatiom: matrix containing iFramesm values but as a ratio of gallery track length    # 
+            iFramesm: matrix containing amount of concurrent frames between gallery track and each main tracks    # 交叠帧数矩阵
+            iFramesRatiom: matrix containing iFramesm values but as a ratio of gallery track length    # 交叠率矩阵
             iTDistm: distance matrix of the internal temporal distances     # 内部时间距离矩阵
             iSDistm: distance matrix of the internal spatial distances.     # 内部空间距离矩阵
             verbose: Whether to print information
@@ -428,28 +428,28 @@ class TrackFinalizer:    # 插值
 
         votes = voteSum/metrics
 
-        # Check if the tracks are equally propable
+        # Check if the tracks are equally probable    是否等概率可能
         if self.n_fish > 1:
-            inf_counter = 0
+            inf_counter = 0    # 数无穷值
             equal_prob = True
             for idx1 in range(self.n_fish):
-                if votes[idx1] == np.inf:
+                if votes[idx1] == np.inf:    # 是无穷
                     inf_counter += 1
                     continue
-                for idx2 in range(idx1, self.n_fish):
+                for idx2 in range(idx1, self.n_fish):    # 非无穷  遍历idx1之后的
 
-                    if np.abs(votes[idx1]-votes[idx2]) > self.metric_margin:
+                    if np.abs(votes[idx1]-votes[idx2]) > self.metric_margin:  # 组合 若大于预设区别值
                         equal_prob = False
                         break
             
             if inf_counter == self.n_fish-1:
                 equal_prob = False
 
-            if equal_prob:
+            if equal_prob:    # 若等可能
                 print("Equal prob")
                 return (False, -1)
 
-        mtID = np.argmin(votes)
+        mtID = np.argmin(votes)    # 若不等可能，返回最大可能的 元组（T/F，主轨迹id）
 
         return (True, mtID)
     
@@ -518,16 +518,16 @@ class TrackFinalizer:    # 插值
 
     def rankTrackletTemporally(self, galleryTracks, mainTracks, verbose = True):
         '''
-        Goes through all gallery tracks, determine the distance to each main track, and sorts them based on the shortest distance. 
-        If the gallery track overlaps with any main track, it is relegated to the end of the list
+        Goes through all gallery tracks, determine the distance to each main track, and sorts them based on the shortest distance.     遍历副轨迹集，计算它们至主轨迹的距离，并怕排序
+        If the gallery track overlaps with any main track, it is relegated to the end of the list    若副轨迹与主轨迹有交叠，则被贬低至list后排
 
         Input:
             galleryTracks: List of IDs for the gallery tracks    副轨迹的id集
             mainTracks: List of IDs for the main tracks    主轨迹的id集
             verbose: Whether to print information about each track
 
-        Output:
-            tempDistList: List of tuples, constructed as (trackID, minimum distance to any main track, track length). The list is sorted by distance, and length for tiebreakers    元组（）
+        Output:                                     元组   轨迹ID   最小距离                             轨迹长度
+            tempDistList: List of tuples, constructed as (trackID, minimum distance to any main track, track length). The list is sorted by distance, and length for tiebreakers    
             orderedGalleryTracks: List of trackIDs from tempDistList  
         '''
         tempDistList = []
@@ -536,21 +536,21 @@ class TrackFinalizer:    # 插值
             gt = self.tracks[gTrack]    # 遍历每个副轨迹实例
             
             min_diff = np.inf
-            for mTrack in mainTracks:
+            for mTrack in mainTracks:    # 遍历每个主轨迹实例
                 mt = self.mainTracks[mTrack]
                 index = self.checkTrackIntersection(mt, gt)
                 
-                if index == -1:
+                if index == -1:    # 没有交叠
                     order, diff = self.getTemporalShift(mt, gt)
                     
-                    if diff < min_diff:
-                        min_diff = diff
+                    if diff < min_diff:    
+                        min_diff = diff    # 得到一个副轨迹至全部主轨迹最小时间距离（帧）
                         
-            tempDistList.append((gTrack, min_diff, len(gt.frame)))    
+            tempDistList.append((gTrack, min_diff, len(gt.frame)))    # 元组（副轨迹id，最小距离，轨迹长度）  
             
-        tempDistList = sorted(tempDistList, key = lambda x: (x[1], x[2]))
+        tempDistList = sorted(tempDistList, key = lambda x: (x[1], x[2]))    # 排序 升序
         
-        orderedGalleryTracks = [x[0] for x in tempDistList]
+        orderedGalleryTracks = [x[0] for x in tempDistList]    # 列表：副轨迹的id（已经排好序了）
         
         if verbose:
             for mTrack in mainTracks:
@@ -633,16 +633,16 @@ class TrackFinalizer:    # 插值
         self.mainTracks = {}
         for mTrack in mainTracks:
             outputDict[mTrack] = [mTrack]    # 输出的字典，先备份一遍
-            self.addMainTrack(mTrack)    # id 号加入addMainTrack
+            self.addMainTrack(mTrack)    # 将mTrack加入至mainTracks    键为ID，元素有：该轨迹的id，该轨迹的帧号，该轨迹的3D坐标
         
         while len(galleryTracks) > 0:
 
             ## Find next gallery track
-            tempDistList, galleryTracks = self.rankTrackletTemporally(galleryTracks, mainTracks)
-            gTrack = tempDistList[0][0]
-            galleryTracks.pop(0)
+            tempDistList, galleryTracks = self.rankTrackletTemporally(galleryTracks, mainTracks)    # 列表元组：（副轨迹的id，最短距离，长度）  列表：副轨迹的id
+            gTrack = tempDistList[0][0]    # 距离最小的一个副轨迹id
+            galleryTracks.pop(0)    # 每次弹出列表第一个元素
             
-            # Per mainTrack, get distance values
+            # Per mainTrack, get distance values    初始化
             tDistm = np.ones(self.n_fish) * -1 # temporal distance
             sDistm = np.ones(self.n_fish) * -1 # spatial distance
             iFramesm = np.ones(self.n_fish) * -1 # number of intersecting frames
@@ -652,11 +652,11 @@ class TrackFinalizer:    # 插值
             validIndecies = [-1]*self.n_fish
             validm = np.zeros(self.n_fish)
 
-            for idx, mTrack in enumerate(mainTracks):
-                distTuple = self.getDistances(gTrack, mTrack)
+            for idx, mTrack in enumerate(mainTracks):    # 遍历每个主轨迹
+                distTuple = self.getDistances(gTrack, mTrack)     
                 validm[idx] = distTuple[-1]
 
-                if validm[idx]:
+                if validm[idx]:    # 该轨迹是否有效
                     tDistm[idx] = distTuple[0]
                     sDistm[idx] = distTuple[1]
                     iFramesm[idx] = distTuple[2]
@@ -668,9 +668,9 @@ class TrackFinalizer:    # 插值
 
             # Check if there are any valid tracks
             if sum(validm) == 0:
-                ## No valid tracks available
+                ## No valid tracks available    # 无有效主轨迹
                 assignLog.append("Gallery {} - No valid main tracks".format(gTrack))
-                notAssigned.append(gTrack)
+                notAssigned.append(gTrack)    # 添加进未分配的副轨迹序列
                 continue
             
             assigned, mtID = self.costAssignment(tDistm, sDistm, iFramesm, iFramesRatiom, iTDistm, iSDistm)
@@ -736,7 +736,7 @@ class TrackFinalizer:    # 插值
 
 
     ### Initial main track selection
-    def getTemporalOverlap(self, mainTrack, galleryTrack):
+    def getTemporalOverlap(self, mainTrack, galleryTrack):    # 返回交叠的时间距离（帧数）
         '''
         Calculates the temporal overlap between the provided tracks, based on their first and last frame number.
         If there is no overlap, a value of -1 is returned
@@ -931,7 +931,7 @@ class TrackFinalizer:    # 插值
                         overlap_lst.append(np.median(med_overlap))
         if len(overlap_lst) > 0:
             sort = np.argmax(overlap_lst)    #
-            return [main_tracks[sort]]    # 返回列表，列表内有个
+            return [main_tracks[sort]]    # 返回列表，列表内有个最大值
         else:
             return []
 
@@ -1128,8 +1128,8 @@ def interpolate(df, dataPath):    # 线性插值
         currRow['interpolated'] = 1
         newRows = newRows.append(currRow,sort=False)
 
-    interpolated = interpolated[interpolated['err'] != -1]
-    interpolated = interpolated.append(newRows,sort=False)    # 合并 为排序
+    interpolated = interpolated[interpolated['err'] != -1]    # 移除掉插值失败的行
+    interpolated = interpolated.append(newRows,sort=False)    # 合并
     return interpolated
 
 
