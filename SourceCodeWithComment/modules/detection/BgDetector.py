@@ -252,7 +252,7 @@ class BgDetector:
         filtered = []
 
         for label in detections:
-            kps = detections[label]
+            kps = detections[label]    # （Keypoint，bbs）
 
             kps.sort(key=lambda x: x[0].size)    # 通过各点的size排序（升序）
 
@@ -349,7 +349,7 @@ class BgDetector:
             
         tl = (np.min(x), np.min(y))    # 求非零元素的AABB
         br = (np.max(x), np.max(y))    # 求非零元素的AABB
-        center = (np.mean(x), np.mean(y))    # 求AABB的形点
+        center = (np.mean(x), np.mean(y))    # 求AABB的形心
         
         if br[0] - tl[0] > br[1] - tl[1]: #If width > height    扁平
             left = (np.min(x), np.mean(y[x == np.min(x)]))      # Middle of the LEFT edge of the BLOB    触框的边界点
@@ -400,7 +400,7 @@ class BgDetector:
                 if self.camId == 2:    # 如果当前为正视
                     bbox = self.bboxes[key]
                 else:   
-                    bbox = key[-1]
+                    bbox = key[-1]    # 取（关键点，bbox）的bbox
 
                 blob = self.labels.copy()    # bbox以外的像素值置为0
                 blob[:bbox[1]] = 0
@@ -694,12 +694,12 @@ class BgDetector:
         x2 = []
         y2 = []
         for i in kp:
-            # Radius of bounding box    # 半径至少为2，至少剔除一个
+            # Radius of bounding box    # 半径至少为2
             radius = max(i[0].size//2, 2) # Enforces minimum radius of 2, to insure overlap between direct neighbour pixels, and force removal of one of them (using NMS)
-            # Upper left corner of bounding box    # 左上角往外扩2
+            # Upper left corner of bounding box    # 左上角往外扩
             x1.append(i[0].pt[0]-radius)
             y1.append(i[0].pt[1]-radius)
-            # Lower right corner of bounding box    # 右下角往外扩2
+            # Lower right corner of bounding box    # 右下角往外扩
             x2.append(i[0].pt[0]+radius)
             y2.append(i[0].pt[1]+radius)
 
@@ -888,10 +888,10 @@ class BgDetector:
         if(findJunctions):
             positions = np.where((filtered==148) | (filtered==149) | (filtered==150) | (filtered==151))
             points = list(zip(list(positions[0]),list(positions[1])))
-            junctions = self.points2CvKeypoints(points, labels, bbox)
+            junctions = self.points2CvKeypoints(points, labels, bbox)    # 主要是设置size，即头宽
 
             for label in junctions:
-                if(label in endpoints):   # 若分叉点是端点的话
+                if(label in endpoints):   # 若分叉点和端点的label id相同
                     # Decrease the significance (size) of the junctions-points. (As they are usually larger than the other keypoints)  缩小分叉点的size，它们通常大区其他关键点
                     for x in junctions[label]:
                         x[0].size = x[0].size/2.5    # size缩小 [0]为pt，[1]为bbox
@@ -918,7 +918,7 @@ class BgDetector:
                 keypoints[currLabel] = []    # 新建以该label id的键，值为空列表
 
             size,rot = self.calcEig(*p,self.thresh,labels, self.winSize)    # 返回关键点的size大小和rotation角度
-            if(size == -1):
+            if(size == -1):    # 跳过被滤去的点
                 continue
             kp = cv2.KeyPoint(float(p[1]),float(p[0]),size,rot,-1,-1,currLabel)   # 创建关键点
             keypoints[currLabel].append([kp, bbox])    # 向该lalel id 添入该关键点和bbox
