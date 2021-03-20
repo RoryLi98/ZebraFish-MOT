@@ -570,9 +570,9 @@ class BgDetector:
 
         # Calc normed histogram
         hist = np.bincount(img.flatten().astype(int))
-        hist = hist / np.sum(hist)
-        histSum = np.cumsum(hist) #Cummulative sum of histogram
-        notZero = np.nonzero(hist)[0]
+        hist = hist / np.sum(hist)    # 归一化
+        histSum = np.cumsum(hist) #Cummulative sum of histogram   累积
+        notZero = np.nonzero(hist)[0]    # 去元组
 
         # Calc black and white entropy
         eps = 0.0000000000000000001
@@ -580,20 +580,20 @@ class BgDetector:
 
         hB = np.zeros(hist.size)
         hW = np.zeros(hist.size)    
-        for t in notZero:         
+        for t in notZero:     # 计算每个灰度所分割的熵    
             # Black entropy
-            ids = np.arange(0, t+1)
+            ids = np.arange(0, t+1)    # 0 - t
             res = abs(np.sum(hist[ids] / histSum[t] * np.log(hist[ids] / histSum[t])))
             hB[t] = res
 
             # White entropy
             pTW = 1.0 - histSum[t]
-            ids = np.arange(t+1, hist.size)
+            ids = np.arange(t+1, hist.size)    # t+1 - size
             res = abs(np.sum(hist[ids] / pTW * np.log(hist[ids] / pTW)))            
             hW[t] = res
 
         # Return histogram index resulting in max entropy
-        res = np.argmax((np.array(hB)+np.array(hW)))
+        res = np.argmax((np.array(hB)+np.array(hW)))    # 黑熵+白熵
         _end =  time.time() 
         if(self.timer):
             print("Entropy time: {0}".format(_end-_start))
@@ -1084,7 +1084,7 @@ if __name__ == '__main__':
 
     bgPath = os.path.join(path, 'background_cam{0}.png'.format(camId))
     
-    # Check if background-image exists
+    # Check if background-image exists    # 若无背景图，则创建一个
     if not os.path.isfile(bgPath):
         print("No background image present") 
         print("... creating one.") 
