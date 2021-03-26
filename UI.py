@@ -14,6 +14,7 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 import sys, json, os, subprocess,re
 import configparser
+from datetime import datetime 
 
 class Ui_dialog(object):
 
@@ -591,10 +592,125 @@ class Ui_dialog(object):
         self.ProjectPath=''
         self.pushButton_6.clicked.connect(self.bgdetection)
         self.pushButton_7.clicked.connect(self.bgdetection)
-       
+        self.pushButton_8.clicked.connect(self.tracking)
+        self.pushButton_9.clicked.connect(self.reconstruction)
+        self.pushButton.clicked.connect(self.ResetAllValue)
     # setupUi
     def ResetAllValue(self):
-        return 0
+        self.groupBox_4.setTitle(QCoreApplication.translate("dialog", u"视频信息", None))
+        self.label.setText(QCoreApplication.translate("dialog", u"鱼的数量：", None))
+        self.lineEdit.setText(QCoreApplication.translate("dialog", u"0", None))
+        self.lineEdit_2.setText(QCoreApplication.translate("dialog", u"60", None))
+        self.label_2.setText(QCoreApplication.translate("dialog", u"视频FPS：", None))
+        self.lineEdit_3.setText(QCoreApplication.translate("dialog", u"169", None))
+        self.label_3.setText(QCoreApplication.translate("dialog", u"俯视同步帧的帧号：", None))
+        self.lineEdit_4.setText(QCoreApplication.translate("dialog", u"165", None))
+        self.label_4.setText(QCoreApplication.translate("dialog", u"正视同步帧的帧号：", None))
+        self.lineEdit_6.setText(QCoreApplication.translate("dialog", u"1", None))
+        self.label_6.setText(QCoreApplication.translate("dialog", u"俯视最小的帧号：", None))
+        self.lineEdit_7.setText(QCoreApplication.translate("dialog", u"1800", None))
+        self.label_7.setText(QCoreApplication.translate("dialog", u"俯视最大的帧号：", None))
+        self.lineEdit_8.setText(QCoreApplication.translate("dialog", u"1", None))
+        self.label_8.setText(QCoreApplication.translate("dialog", u"正视最小的帧号：", None))
+        self.lineEdit_9.setText(QCoreApplication.translate("dialog", u"1800", None))
+        self.label_9.setText(QCoreApplication.translate("dialog", u"正视最大的帧号：", None))
+        self.lineEdit_13.setText(QCoreApplication.translate("dialog", u"2", None))
+        self.label_13.setText(QCoreApplication.translate("dialog", u"下采样率：", None))
+        self.lineEdit_5.setText(QCoreApplication.translate("dialog", u"80", None))
+        self.label_5.setText(QCoreApplication.translate("dialog", u"制作背景图抽取的帧数：", None))
+        self.groupBox_2.setTitle(QCoreApplication.translate("dialog", u"2D目标跟踪的参数：", None))
+        self.lineEdit_16.setText(QCoreApplication.translate("dialog", u"15", None))
+        self.label_16.setText(QCoreApplication.translate("dialog", u"俯视的鬼影阈值：", None))
+        self.lineEdit_17.setText(QCoreApplication.translate("dialog", u"0.5", None))
+        self.label_17.setText(QCoreApplication.translate("dialog", u"正视的鬼影阈值：", None))
+        self.label_18.setText(QCoreApplication.translate("dialog", u"允许误匹配的掉帧数：", None))
+        self.lineEdit_18.setText(QCoreApplication.translate("dialog", u"10", None))
+        self.label_19.setText(QCoreApplication.translate("dialog", u"最小置信度：", None))
+        self.lineEdit_19.setText(QCoreApplication.translate("dialog", u"0.95", None))
+        self.groupBox.setTitle(QCoreApplication.translate("dialog", u"传统目标检测的参数：", None))
+        # self.lineEdit_10.setText(QCoreApplication.translate("dialog", u"skeleton", None))
+        # self.label_10.setText(QCoreApplication.translate("dialog", u"俯视用的传统检测方法：", None))
+        # self.lineEdit_12.setText(QCoreApplication.translate("dialog", u"blob", None))
+        # self.label_12.setText(QCoreApplication.translate("dialog", u"正视用的传统检测方法：", None))
+        self.lineEdit_14.setText(QCoreApplication.translate("dialog", u"skeleton", None))
+        self.label_14.setText(QCoreApplication.translate("dialog", u"俯视用的分割方法：", None))
+        self.lineEdit_15.setText(QCoreApplication.translate("dialog", u"blob", None))
+        self.label_15.setText(QCoreApplication.translate("dialog", u"正视用的分割方法：", None))
+        self.label_20.setText(QCoreApplication.translate("dialog", u"中值滤波核的大小：", None))
+        self.lineEdit_20.setText(QCoreApplication.translate("dialog", u"5", None))
+        self.label_21.setText(QCoreApplication.translate("dialog", u"连通域的最小面积：", None))
+        self.lineEdit_21.setText(QCoreApplication.translate("dialog", u"100", None))
+        self.lineEdit_24.setText(QCoreApplication.translate("dialog", u"20", None))
+        self.label_24.setText(QCoreApplication.translate("dialog", u"窗口内的最小面积", None))
+        self.lineEdit_25.setText(QCoreApplication.translate("dialog", u"30", None))
+        self.label_25.setText(QCoreApplication.translate("dialog", u"最佳关键点的最小长度：", None))
+        self.lineEdit_26.setText(QCoreApplication.translate("dialog", u"10", None))
+        self.label_26.setText(QCoreApplication.translate("dialog", u"窗口的半径：", None))
+        self.lineEdit_27.setText(QCoreApplication.translate("dialog", u"0.25", None))
+        self.label_27.setText(QCoreApplication.translate("dialog", u"非极大值抑制的阈值：", None))
+        self.pushButton.setText(QCoreApplication.translate("dialog", u"恢复默认", None))
+        self.pushButton_2.setText(QCoreApplication.translate("dialog", u"全部保存", None))
+        self.groupBox_3.setTitle(QCoreApplication.translate("dialog", u"3D目标跟踪的参数：", None))
+        self.label_35.setText(QCoreApplication.translate("dialog", u"最大允许时间距离：", None))
+        self.lineEdit_35.setText(QCoreApplication.translate("dialog", u"-1", None))
+        self.lineEdit_36.setText(QCoreApplication.translate("dialog", u"-1", None))
+        self.label_36.setText(QCoreApplication.translate("dialog", u"最大允许空间距离：", None))
+        self.lineEdit_37.setText(QCoreApplication.translate("dialog", u"-1", None))
+        self.label_37.setText(QCoreApplication.translate("dialog", u"最大允许交叠的帧数：", None))
+        self.lineEdit_38.setText(QCoreApplication.translate("dialog", u"-1", None))
+        self.label_38.setText(QCoreApplication.translate("dialog", u"最大允许交叠率：", None))
+        self.lineEdit_39.setText(QCoreApplication.translate("dialog", u"0.20", None))
+        self.label_39.setText(QCoreApplication.translate("dialog", u"最小主轨迹交叠倍数：", None))
+        self.lineEdit_40.setText(QCoreApplication.translate("dialog", u"5", None))
+        self.label_40.setText(QCoreApplication.translate("dialog", u"主轨迹搜寻倍数：", None))
+        self.lineEdit_41.setText(QCoreApplication.translate("dialog", u"0.02", None))
+        self.label_41.setText(QCoreApplication.translate("dialog", u"空白度量：", None))
+        self.groupBox_6.setTitle(QCoreApplication.translate("dialog", u"鱼缸的参数：", None))
+        self.lineEdit_22.setText(QCoreApplication.translate("dialog", u"29", None))
+        self.label_22.setText(QCoreApplication.translate("dialog", u"鱼缸的长：", None))
+        self.lineEdit_23.setText(QCoreApplication.translate("dialog", u"29", None))
+        self.label_23.setText(QCoreApplication.translate("dialog", u"鱼缸的宽：", None))
+        self.lineEdit_42.setText(QCoreApplication.translate("dialog", u"668", None))
+        self.label_42.setText(QCoreApplication.translate("dialog", u"俯视鱼缸左上角的坐标：", None))
+        self.label_43.setText(QCoreApplication.translate("dialog", u"俯视鱼缸右上角的坐标：", None))
+        self.label_44.setText(QCoreApplication.translate("dialog", u"俯视鱼缸右下角的坐标：", None))
+        self.label_45.setText(QCoreApplication.translate("dialog", u"俯视鱼缸左下角的坐标：", None))
+        self.label_46.setText(QCoreApplication.translate("dialog", u"正视鱼缸左上角的坐标：", None))
+        self.lineEdit_47.setText(QCoreApplication.translate("dialog", u"84", None))
+        self.lineEdit_48.setText(QCoreApplication.translate("dialog", u"83", None))
+        self.lineEdit_43.setText(QCoreApplication.translate("dialog", u"1987", None))
+        self.lineEdit_44.setText(QCoreApplication.translate("dialog", u"1973", None))
+        self.lineEdit_49.setText(QCoreApplication.translate("dialog", u"1411", None))
+        self.lineEdit_45.setText(QCoreApplication.translate("dialog", u"652", None))
+        self.lineEdit_50.setText(QCoreApplication.translate("dialog", u"1393", None))
+        self.lineEdit_46.setText(QCoreApplication.translate("dialog", u"246", None))
+        self.lineEdit_51.setText(QCoreApplication.translate("dialog", u"400", None))
+        self.lineEdit_52.setText(QCoreApplication.translate("dialog", u"2445", None))
+        self.lineEdit_53.setText(QCoreApplication.translate("dialog", u"433", None))
+        self.lineEdit_54.setText(QCoreApplication.translate("dialog", u"2275", None))
+        self.lineEdit_55.setText(QCoreApplication.translate("dialog", u"1405", None))
+        self.lineEdit_56.setText(QCoreApplication.translate("dialog", u"1376", None))
+        self.lineEdit_57.setText(QCoreApplication.translate("dialog", u"392", None))
+        self.label_47.setText(QCoreApplication.translate("dialog", u"正视鱼缸右下角的坐标：", None))
+        self.label_48.setText(QCoreApplication.translate("dialog", u"正视鱼缸右上角的坐标：", None))
+        self.label_49.setText(QCoreApplication.translate("dialog", u"正视鱼缸左下角的坐标：", None))
+        self.lineEdit_76.setText(QCoreApplication.translate("dialog", u"15", None))
+        self.label_67.setText(QCoreApplication.translate("dialog", u"水深：", None))
+        self.groupBox_7.setTitle(QCoreApplication.translate("dialog", u"3D重建的参数：", None))
+        self.lineEdit_28.setText(QCoreApplication.translate("dialog", u"8.03", None))
+        self.label_28.setText(QCoreApplication.translate("dialog", u"重投影误差的均值：", None))
+        self.label_29.setText(QCoreApplication.translate("dialog", u"重投影误差的标准差：", None))
+        self.lineEdit_29.setText(QCoreApplication.translate("dialog", u"5.26", None))
+        self.label_30.setText(QCoreApplication.translate("dialog", u"移动误差的均值：", None))
+        self.lineEdit_30.setText(QCoreApplication.translate("dialog", u"2.13", None))
+        self.label_31.setText(QCoreApplication.translate("dialog", u"移动影误差的标准差：", None))
+        self.lineEdit_31.setText(QCoreApplication.translate("dialog", u"2.32", None))
+        self.label_32.setText(QCoreApplication.translate("dialog", u"同视角最大交叠：", None))
+        self.lineEdit_32.setText(QCoreApplication.translate("dialog", u"0", None))
+        self.lineEdit_33.setText(QCoreApplication.translate("dialog", u"10", None))
+        self.label_33.setText(QCoreApplication.translate("dialog", u"轨迹的最小长度：", None))
+        self.lineEdit_34.setText(QCoreApplication.translate("dialog", u"25", None))
+        self.label_34.setText(QCoreApplication.translate("dialog", u"时间惩罚：", None))
 
     def CalibrateCamera(self):
         temp=[0,0,0,0,0,0]
@@ -863,60 +979,140 @@ class Ui_dialog(object):
                 break    
 
     def bgdetection(self):
+        self.textEdit.insertPlainText("Starting Detecting\n")
         if(self.radioButton.isChecked()):
-            print("传统")
+            print("传统方法检测")  
         if(self.radioButton_2.isChecked()):
             print("YOLOV3 Full")
         if(self.radioButton_7.isChecked()):    
-            print("YOLOV4")
+            print("YOLOV4 Full")
         if(self.radioButton_3.isChecked()):
-            print("FAST")
+            print("FAST Full")
         if(self.radioButton_4.isChecked()):
             print("YOLOV3 Head")
         if(self.radioButton_6.isChecked()):
             print("YOLOV4 Head")
         if(self.radioButton_5.isChecked()):    
             print("FAST Head")
+        _start = datetime.now() 
+        print("开始检测俯拍视角")
+        p = subprocess.Popen(['python','D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\modules\\detection\\BgDetector.py','-f',self.ProjectPath,'-c','1','-i'],
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        while True:
+            response = p.stdout.readline()
+            Text = response.decode()
+            if Text != '': 
+                self.textEdit.insertPlainText(str(Text)+'\n')
+            else:
+                break    
+        _end = datetime.now() 
+        timerup = (_end-_start).seconds
+        print("俯拍检测用了"+str(timerup)+"秒")
+        self.textEdit.insertPlainText("Cam1 Detection： "+str(timerup)+" second\n")
+
+        print("开始检测侧拍视角")
+        _start = datetime.now() 
+        p = subprocess.Popen(['python','D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\modules\\detection\\BgDetector.py','-f',self.ProjectPath,'-c','2','-i'],
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        while True:
+            response = p.stdout.readline()
+            Text = response.decode()
+            if Text != '': 
+                self.textEdit.insertPlainText(str(Text)+'\n')
+            else:
+                break    
+        _end = datetime.now() 
+        timerup = (_end-_start).seconds
+        print("侧拍检测用了"+str(timerup)+"秒")
+        self.textEdit.insertPlainText("Cam2 Detection： "+str(timerup)+" second\n")
 
 
 
+    def tracking(self):  
+        # python TrackerVisual.py -f D:\bishe\3DZeF20\3DZeF20\train\ZebraFish-04 -c 2 -i -pd
+        _start = datetime.now() 
+        print("开始俯拍视角跟踪")
+        p = subprocess.Popen(['python','D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\modules\\tracking\\TrackerVisual.py','-f',self.ProjectPath,'-c','1','-i','-pd'],
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        while True:
+            response = p.stdout.readline()
+            Text = response.decode()
+            if Text != '': 
+                self.textEdit.insertPlainText(str(Text)+'\n')
+            else:
+                break    
+        _end = datetime.now() 
+        timerup = (_end-_start).seconds
+        print("俯拍跟踪用了"+str(timerup)+"秒")
 
-    def tracking(self):
-        print("Initial Tracking")       
+        _start = datetime.now() 
+        print("开始侧拍视角跟踪")
+        p = subprocess.Popen(['python','D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\modules\\tracking\\TrackerVisual.py','-f',self.ProjectPath,'-c','2','-i','-pd'],
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        while True:
+            response = p.stdout.readline()
+            Text = response.decode()
+            if Text != '': 
+                self.textEdit.insertPlainText(str(Text)+'\n')
+            else:
+                break    
+        _end = datetime.now() 
+        timerup = (_end-_start).seconds
+        print("侧拍跟踪用了"+str(timerup)+"秒")
+
+
 
     def reconstruction(self):
-        print("Initial Reconstruction")          
 
+        print("开始三维重建")
 
+        #python JsonToCamera.py -f D:\bishe\3DZeF20\3DZeF20\train\ZebraFish-03 -c 1
 
+        p = subprocess.Popen(['python','D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\modules\\reconstruction\\JsonToCamera.py','-f',self.ProjectPath,'-c','1'],
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        while True:
+            response = p.stdout.readline()
+            Text = response.decode()
+            if Text != '': 
+                self.textEdit.insertPlainText(str(Text)+'\n')
+            else:
+                break    
 
+        p = subprocess.Popen(['python','D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\modules\\reconstruction\\JsonToCamera.py','-f',self.ProjectPath,'-c','2'],
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        while True:
+            response = p.stdout.readline()
+            Text = response.decode()
+            if Text != '': 
+                self.textEdit.insertPlainText(str(Text)+'\n')
+            else:
+                break    
+        #python TrackletMatching.py -f D:\bishe\3DZeF20\3DZeF20\train\ZebraFish-03
 
+        p = subprocess.Popen(['python','D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\modules\\reconstruction\\TrackletMatching.py','-f',self.ProjectPath],
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        while True:
+            response = p.stdout.readline()
+            Text = response.decode()
+            if Text != '': 
+                self.textEdit.insertPlainText(str(Text)+'\n')
+            else:
+                break    
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        p = subprocess.Popen(['python','D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\modules\\reconstruction\\FinalizeTracks.py','-f',self.ProjectPath],
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        while True:
+            response = p.stdout.readline()
+            Text = response.decode()
+            if Text != '': 
+                self.textEdit.insertPlainText(str(Text)+'\n')
+            else:
+                break    
 
     def retranslateUi(self, dialog):
         dialog.setWindowTitle(QCoreApplication.translate("dialog", u"基于深度学习的斑马鱼目标检测跟踪系统", None))
         self.comboBox.setItemText(0, QCoreApplication.translate("dialog", u".jpg", None))
         self.comboBox.setItemText(1, QCoreApplication.translate("dialog", u".png", None))
-
         self.label_11.setText(QCoreApplication.translate("dialog", u"方块大小(厘米)：", None))
         self.label_50.setText(QCoreApplication.translate("dialog", u"角点长和宽的个数：", None))
         self.label_51.setText(QCoreApplication.translate("dialog", u"图片格式：", None))
