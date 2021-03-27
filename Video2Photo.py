@@ -1,14 +1,18 @@
 import cv2 
-savepath = "E:\\FFOutput\\Sync\\ZebraFish-01\\imgT\\"
+savepath = "E:\\FFOutput\\Sync\\ZebraFish-04\\imgF\\"
 
-videopath = "E:\\FFOutput\\Sync\\cam1_1.mp4"
+videopath = "E:\\FFOutput\\Sync\\cam2_4.mp4"
 cap = cv2.VideoCapture(videopath) 
 CountImage = 1
-while(cap.isOpened()): 
+FrameNumber = int(cap.get(7))
+print(FrameNumber)
+while(CountImage<=FrameNumber): 
     ret, frame = cap.read() 
     Filename = savepath + str(CountImage).rjust(6,'0')+ '.jpg'
-    CountImage +=1
+    # cv2.imshow("dada",frame)
     cv2.imwrite(Filename, frame,[int(cv2.IMWRITE_JPEG_QUALITY), 100])
-    print(Filename)
+    print(CountImage)
+    # cv2.waitKey(1)
+    CountImage +=1
 cap.release() 
 cv2.destroyAllWindows()
