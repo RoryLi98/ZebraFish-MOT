@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-def get3Dpos(df, cam, task):
+def get3Dpos(df, cam, task):    # 取3D坐标
     """
     Returns the 3D position in a dataset
 
@@ -19,20 +19,20 @@ def get3Dpos(df, cam, task):
         pos: Numpy array of size [n_ids, 3] containing the 3d position
         ids: List of IDs
     """
-    ids = df["id"].unique()
-    ids = [int(x) for x in ids]
+    ids = df["id"].unique()    # 取所有ID
+    ids = [int(x) for x in ids]    # 遍历每个ID
 
-    pos = np.zeros((len(ids), 3))
-    for idx, identity in enumerate(ids):
+    pos = np.zeros((len(ids), 3))    # 设置n行三列的位置
+    for idx, identity in enumerate(ids):   # 遍历取值
         df_id = df[df["id"] == identity]
-        pos[idx,0] = df_id["3d_x"]
-        pos[idx,1] = df_id["3d_y"]
-        pos[idx,2] = df_id["3d_z"]
+        pos[idx,0] = df_id["3d_x"]   # x
+        pos[idx,1] = df_id["3d_y"]   # y
+        pos[idx,2] = df_id["3d_z"]   # z
     
     return pos, ids
 
 
-def get2Dpos(df, cam, task):
+def get2Dpos(df, cam, task):    # 取2D坐标
     """
     Returns the 2D position in a dataset. Depending on the set task it either returns the positon of the designated keypoint or of the bounding box center
 
@@ -42,7 +42,7 @@ def get2Dpos(df, cam, task):
         task: if 'bbox' return the bbox center, else return the keypoint x and y coordinates
 
     Output:
-        pos: Numpy array of size [n_ids, 3] containing the 3d position
+        pos: Numpy array of size [n_ids, 2] containing the 2d position
         ids: List of IDs
     """
     ids = df["id"].unique()
@@ -52,17 +52,17 @@ def get2Dpos(df, cam, task):
     for idx, identity in enumerate(ids):
         df_id = df[df["id"] == identity]
 
-        if "bbox" in task:
+        if "bbox" in task:    # 若task为bbox，则返回bbox的中心
             pos[idx,0] = df_id[cam+"_x_bb"]
             pos[idx,1] = df_id[cam+"_y_bb"]
-        else:
+        else:		      # 若task为无，则关键点
             pos[idx,0] = df_id[cam+"_x"]
             pos[idx,1] = df_id[cam+"_y"]
     
     return pos, ids
 
 
-def getBbox(df, cam, task):
+def getBbox(df, cam, task):    # 取bbox的信息
     """
     Returns the bbox coordiantes in a dataset
 
@@ -82,10 +82,10 @@ def getBbox(df, cam, task):
     for idx, identity in enumerate(ids):
         df_id = df[df["id"] == identity]
 
-        pos[idx,0] = df_id[cam+"_bb_tl_x"]
-        pos[idx,1] = df_id[cam+"_bb_tl_y"]
-        pos[idx,2] = df_id[cam+"_bb_br_x"]
-        pos[idx,3] = df_id[cam+"_bb_br_y"]
+        pos[idx,0] = df_id[cam+"_bb_tl_x"]    # 左上角点x
+        pos[idx,1] = df_id[cam+"_bb_tl_y"]    # 左上角点y
+        pos[idx,2] = df_id[cam+"_bb_br_x"]    # 右上角点x
+        pos[idx,3] = df_id[cam+"_bb_br_y"]    # 右上角点y
 
     return pos, ids
 
@@ -98,35 +98,35 @@ def pairwiseDistance(X,Y, maxDist):
     X_ele, X_dim = X.shape
     Y_ele, Y_dim = Y.shape
 
-    assert X_dim == Y_dim, "The two provided matrices not have observations of the same dimensionality"
+    assert X_dim == Y_dim, "The two provided matrices not have observations of the same dimensionality"    # 维度不同
 
     mat = np.zeros((X_ele, Y_ele))
 
     for row, posX in enumerate(X):
         for col, posY in enumerate(Y):
-            mat[row, col] = np.linalg.norm(posX-posY)
+            mat[row, col] = np.linalg.norm(posX-posY)    # 计算欧式距离
 
-    mat[mat > maxDist] = np.nan
+    mat[mat > maxDist] = np.nan    # 将大于某值的位置 置为nan
 
     return mat  
 
 
-def IoU(X, Y):
+def IoU(X, Y):    # 计算IOU
     """
     Calculates the Intersection over Union for two bounding boxes, X and Y, which are 4D vectos containing the top left and bottom right positions of the bounding box
     """
 
-    max_tl_x = max(X[0], Y[0])
-    max_tl_y = max(X[1], Y[1])
-    min_br_x = min(X[2], Y[2])
-    min_br_y = min(X[3], Y[3])
+    max_tl_x = max(X[0], Y[0])    # 取左上角坐标的最大x
+    max_tl_y = max(X[1], Y[1])    # 取左上角坐标的最大y
+    min_br_x = min(X[2], Y[2])    # 取右下角坐标的最小x
+    min_br_y = min(X[3], Y[3])    # 取右下角坐标的最小y
 
-    intersection_area = max(0, min_br_x - max_tl_x + 1) * max(0, min_br_y - max_tl_y + 1)
+    intersection_area = max(0, min_br_x - max_tl_x + 1) * max(0, min_br_y - max_tl_y + 1)    # 求交叠的面积
 
-    X_area = (X[2]-X[0]+1)*(X[3]-X[1]+1)
-    Y_area = (Y[2]-Y[0]+1)*(Y[3]-Y[1]+1)
+    X_area = (X[2]-X[0]+1)*(X[3]-X[1]+1)    # 求框一的面积
+    Y_area = (Y[2]-Y[0]+1)*(Y[3]-Y[1]+1)    # 求框二的面积
 
-    return intersection_area / (float(X_area + Y_area - intersection_area))
+    return intersection_area / (float(X_area + Y_area - intersection_area))    求IOU
 
 
 def IoUDistance(X, Y, maxDist):
@@ -137,13 +137,13 @@ def IoUDistance(X, Y, maxDist):
     X_ele, X_dim = X.shape
     Y_ele, Y_dim = Y.shape
 
-    assert X_dim == Y_dim, "The two provided matrices not have observations of the same dimensionality"
+    assert X_dim == Y_dim, "The two provided matrices not have observations of the same dimensionality"    # 维度不同
 
     mat = np.zeros((X_ele, Y_ele))
 
     for row, bboxX in enumerate(X):
         for col, bboxY in enumerate(Y):
-            mat[row, col] = 1 - IoU(bboxX, bboxY)
+            mat[row, col] = 1 - IoU(bboxX, bboxY)    # IOU越大距离越小
 
     mat[mat > maxDist] = np.nan
 
@@ -326,7 +326,7 @@ def MOT_Evaluation(args):
     
     gt_csv = args["gtCSV"]
     det_csv = args["detCSV"]
-    task = args["task"]
+    task = args["task"]    # [3D, cam1, cam2, cam1_bbox, cam2_bbox]
     bboxCenter = args["bboxCenter"]
     useMOTFormat = args["useMOTFormat"]
     maxDist = args["thresh"]
@@ -336,8 +336,8 @@ def MOT_Evaluation(args):
     if not os.path.isdir(outputDir):
         os.makedirs(outputDir)
 
-    if useMOTFormat:
-        gt_df = pd.read_csv(gt_csv, sep=",", header=None, usecols=[0,1,2,3,4], names=['frame','id','3d_x','3d_y','3d_z'])
+    if useMOTFormat:    # 若使用MOTFormat格式，不能与bbox同时使用
+        gt_df = pd.read_csv(gt_csv, sep=",", header=None, usecols=[0,1,2,3,4], names=['frame','id','3d_x','3d_y','3d_z'])    #用0，1，2，3，4列 GT
     else:
         gt_df = pd.read_csv(gt_csv, sep=";")
     det_df = pd.read_csv(det_csv, sep=",")
@@ -350,7 +350,7 @@ def MOT_Evaluation(args):
         det_frame_col = "frame"
 
         gt_df = gt_df.dropna(subset=["3d_x", "3d_y", "3d_z"])
-        det_df = det_df[(det_df["3d_x"] > 0)  &  (det_df["3d_y"] > 0)  &  (det_df["3d_z"] > 0)]
+        det_df = det_df[(det_df["3d_x"] > 0)  &  (det_df["3d_y"] > 0)  &  (det_df["3d_z"] > 0)]    # 过滤掉无效行
 
     elif task == "cam1":
         posFunc = get2Dpos
@@ -358,33 +358,33 @@ def MOT_Evaluation(args):
         cam = "cam1"
         gt_frame_col = "cam1_frame"
 
-        if "cam1_frame" in det_df.columns:
+        if "cam1_frame" in det_df.columns:    # 若det_df中无"cam1_frame"列索引，则设置成"frame"
             det_frame_col = "cam1_frame"
         else:
             det_frame_col = "frame"
 
 
         if bboxCenter:
-            task += "-bbox_center"
+            task += "-bbox_center"    # 若需要bboxCenter，则在task后增加（返回框框的中心点）
 
             gt_df["cam1_x_bb"] = gt_df["cam1_tl_x"] + (gt_df["cam1_br_x"]-gt_df["cam1_tl_x"])//2
             gt_df["cam1_y_bb"] = gt_df["cam1_tl_y"] + (gt_df["cam1_br_y"]-gt_df["cam1_tl_y"])//2
             gt_df = gt_df.dropna(subset=["cam1_x_bb", "cam1_y_bb"])
             
-            if "cam1_aa_tl_x" in det_df.columns:
+            if "cam1_aa_tl_x" in det_df.columns:     # "cam1_aa_tl_x"在列索引内
                 det_df = det_df[(det_df["cam1_aa_tl_x"] > 0)  &  (det_df["cam1_aa_w"] > 0)  &  (det_df["cam1_aa_tl_y"] > 0) &  (det_df["cam1_aa_h"] > 0)]
                 det_df["cam1_x_bb"] = det_df["cam1_aa_tl_x"] + det_df["cam1_aa_w"]//2
                 det_df["cam1_y_bb"] = det_df["cam1_aa_tl_y"] + det_df["cam1_aa_h"]//2
-            else:
+            else:				     # "cam1_aa_tl_x"不在列索引内，则用"aa_tl_x"
                 det_df = det_df[(det_df["aa_tl_x"] > 0)  &  (det_df["aa_w"] > 0)  &  (det_df["aa_tl_y"] > 0) &  (det_df["aa_h"] > 0)]
                 det_df["cam1_x_bb"] = det_df["aa_tl_x"] + det_df["aa_w"]//2
                 det_df["cam1_y_bb"] = det_df["aa_tl_y"] + det_df["aa_h"]//2
             det_df = det_df.dropna(subset=["cam1_x_bb", "cam1_y_bb"])
 
-        else:
+        else:	# 不用bbox，则用关键点x与y点做比较
             gt_df = gt_df.dropna(subset=["cam1_x", "cam1_y"])
 
-            if "cam1_x" not in det_df.columns:
+            if "cam1_x" not in det_df.columns:    # 若"cam1_x"不在det_df列索引内，则用x与y点
                 det_df["cam1_x"] = det_df["x"]
                 det_df["cam1_y"] = det_df["y"]
             det_df = det_df[(det_df["cam1_x"] > 0)  &  (det_df["cam1_y"] > 0)]
@@ -427,9 +427,9 @@ def MOT_Evaluation(args):
             det_df = det_df[(det_df["cam2_x"] > 0)  &  (det_df["cam2_y"] > 0)]
             det_df = det_df.dropna(subset=["cam2_x", "cam2_y"])
 
-    elif task == "cam1_bbox":
-        posFunc = getBbox
-        distFunc = IoUDistance
+    elif task == "cam1_bbox":    # 若需要比较bbox
+        posFunc = getBbox    # 取bbox
+        distFunc = IoUDistance    # 取IOU距离，
         cam = "cam1"
         gt_frame_col = "cam1_frame"
         if "cam1_frame" in det_df.columns:
@@ -497,24 +497,24 @@ def MOT_Evaluation(args):
         sys.exit()
 
 
-    gt_frames = gt_df[gt_frame_col].unique()
-    det_frames = det_df[det_frame_col].unique()
+    gt_frames = gt_df[gt_frame_col].unique()   # 取frame
+    det_frames = det_df[det_frame_col].unique()    # 取frame
 
     gt_frames = [int(x) for x in gt_frames]
     det_frames = [int(x) for x in det_frames]
 
-    frames = list(set(gt_frames+det_frames))
+    frames = list(set(gt_frames+det_frames))    # 去重
 
     print("Amount of GT frames: {}\nAmount of det frames: {}\nSet of all frames: {}".format(len(gt_frames), len(det_frames), len(frames)))
 
 
     acc = mm.MOTAccumulator(auto_id=False)
 
-    for frame in frames:
+    for frame in frames:    # 遍历每帧
 
         # Get the df entries for this specific frame
-        gts = gt_df[gt_df[gt_frame_col] == frame]
-        dets = det_df[det_df[det_frame_col] == frame]
+        gts = gt_df[gt_df[gt_frame_col] == frame]    # 取具体某帧号的行
+        dets = det_df[det_df[det_frame_col] == frame]    # 取具体某帧号的行
 
         gt_data = True
         det_data = True
