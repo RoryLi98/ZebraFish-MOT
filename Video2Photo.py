@@ -1,7 +1,7 @@
 import cv2 
-savepath = "E:\\FFOutput\\Sync\\ZebraFish-04\\imgF\\"
+savepath = "E:\\FFOutput\\Sync\\ZebraFish-03\\imgT\\"
 
-videopath = "E:\\FFOutput\\Sync\\cam2_4.mp4"
+videopath = "E:\\FFOutput\\Sync\\cam1_3.mp4"
 cap = cv2.VideoCapture(videopath) 
 CountImage = 1
 FrameNumber = int(cap.get(7))

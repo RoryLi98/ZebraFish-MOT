@@ -574,9 +574,35 @@ class Ui_dialog(object):
         self.pushButton_10.setObjectName(u"pushButton_10")
         self.pushButton_10.setGeometry(QRect(820, 190, 75, 24))
         self.tabWidget.addTab(self.tab_2, "")
+
         self.tab_3 = QWidget()
         self.tab_3.setObjectName(u"tab_3")
+        self.groupBox_9 = QGroupBox(self.tab_3)
+        self.groupBox_9.setObjectName(u"groupBox_9")
+        self.groupBox_9.setGeometry(QRect(150, 40, 671, 271))
+        self.pushButton_11 = QPushButton(self.groupBox_9)
+        self.pushButton_11.setObjectName(u"pushButton_11")
+        self.pushButton_11.setGeometry(QRect(50, 110, 131, 61))
+        self.pushButton_12 = QPushButton(self.groupBox_9)
+        self.pushButton_12.setObjectName(u"pushButton_12")
+        self.pushButton_12.setGeometry(QRect(270, 110, 131, 61))
+        self.pushButton_13 = QPushButton(self.groupBox_9)
+        self.pushButton_13.setObjectName(u"pushButton_13")
+        self.pushButton_13.setGeometry(QRect(490, 110, 131, 61))
+        self.groupBox_10 = QGroupBox(self.tab_3)
+        self.groupBox_10.setObjectName(u"groupBox_10")
+        self.groupBox_10.setGeometry(QRect(150, 370, 671, 271))
+        self.pushButton_14 = QPushButton(self.groupBox_10)
+        self.pushButton_14.setObjectName(u"pushButton_14")
+        self.pushButton_14.setGeometry(QRect(50, 100, 131, 61))
+        self.pushButton_15 = QPushButton(self.groupBox_10)
+        self.pushButton_15.setObjectName(u"pushButton_15")
+        self.pushButton_15.setGeometry(QRect(270, 100, 131, 61))
+        self.pushButton_16 = QPushButton(self.groupBox_10)
+        self.pushButton_16.setObjectName(u"pushButton_16")
+        self.pushButton_16.setGeometry(QRect(490, 100, 131, 61))
         self.tabWidget.addTab(self.tab_3, "")
+
         self.retranslateUi(dialog)
         self.tabWidget.setCurrentIndex(1)
 
@@ -588,7 +614,6 @@ class Ui_dialog(object):
         self.pushButton_5.clicked.connect(self.FindPath5)
         self.pushButton_4.clicked.connect(self.CalibrateCamera)
         self.pushButton_2.clicked.connect(self.writeConfig)
-        # self.pushButton_2.clicked.connect(self.CreateSettingJson)
         self.ProjectPath=''
         self.pushButton_6.clicked.connect(self.bgdetection)
         self.pushButton_7.clicked.connect(self.bgdetection)
@@ -1256,6 +1281,17 @@ class Ui_dialog(object):
         self.pushButton_10.setText(QCoreApplication.translate("dialog", u"清空", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("dialog", u"执行过程", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), QCoreApplication.translate("dialog", u"显示结果", None))
+
+        self.groupBox_9.setTitle(QCoreApplication.translate("dialog", u"浏览视角", None))
+        self.pushButton_11.setText(QCoreApplication.translate("dialog", u"正视图", None))
+        self.pushButton_12.setText(QCoreApplication.translate("dialog", u"俯视图", None))
+        self.pushButton_13.setText(QCoreApplication.translate("dialog", u"斜侧拍图", None))
+        self.groupBox_10.setTitle(QCoreApplication.translate("dialog", u"生成视频", None))
+        self.pushButton_14.setText(QCoreApplication.translate("dialog", u"正视图", None))
+        self.pushButton_15.setText(QCoreApplication.translate("dialog", u"俯视图", None))
+        self.pushButton_16.setText(QCoreApplication.translate("dialog", u"斜侧拍图", None))
+
+
     # retranslateUi
 
 if __name__ == "__main__":
