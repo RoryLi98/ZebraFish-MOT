@@ -96,7 +96,7 @@ class Tracker:
 
     def mahalanobisDistance(self, Xp, Xg, M, psd=False):
         """
-        Calcualtes the squared Mahalanobis distance between the supplied probe and gallery images    测试 训练 ？
+        Calcualtes the squared Mahalanobis distance between the supplied probe and gallery images    计算马氏距离的平方
         
         Input:
             Xp: Numpy matrix containg the probe image features, with dimensions [n_probe, n_features]    
@@ -229,7 +229,7 @@ class Tracker:
         Input: 
             frameNumber: The current frame number (Int)    当前帧号
             detections: List of cv2.keyPoints (the detections) found in the current frame.    当前帧中关键点
-            bbox: List of dicts containing bounding boxes associated with the detected keypoints.    关键点的bbox
+            bbox: List of dicts containing bounding boxes associated with the detected keypoints.    bbox数据
             frame: The current frame as numpy array    当前帧号
             labels: Grayscale image where each BLOB has pixel value equal to its label    灰度图 
             verbose: Whether to print information or not.
