@@ -1,0 +1,33 @@
+<annotation>
+  <folder>Zebrafish-01-T</folder>
+  <filename>006229.jpg</filename>
+  <size>
+    <width>2704</width>
+    <height>1520</height>
+    <depth>3</depth>
+  </size>
+  <object>
+    <name>Zebrafish</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>895</xmin>
+      <ymin>1099</ymin>
+      <xmax>1060</xmax>
+      <ymax>1132</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>Zebrafish</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>968</xmin>
+      <ymin>1197</ymin>
+      <xmax>1014</xmax>
+      <ymax>1353</ymax>
+    </bndbox>
+  </object>
+</annotation>
