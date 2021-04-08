@@ -281,7 +281,7 @@ class Tracker:
             else:
                 # A new track is created if the following is true:    会新创建一条track的情况
                 # 1) The cost (L2 distance) is higher than the ghost threshold    欧氏距离大于鬼影阈值
-                # 2) It is an actual detection (mRow < numNew)   numNew = 检测数  最匹配配对中的目标是真的
+                # 2) It is an actual detection (mRow < numNew)   目标号小于检测到的目标数  即配对中的目标是真的，不是dummy detection
                 if(mRow < numNew):
                     # Create new track
                     newTrack = Track()

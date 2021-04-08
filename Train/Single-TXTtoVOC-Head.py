@@ -5,17 +5,17 @@ import string
 import pandas as pd
 from lxml.etree import Element, SubElement, tostring
 
-#GroundTruth = np.loadtxt('D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt\\gt.txt', delimiter=',' , usecols=[0,5,6,11]) #存放顶视图GroundTruth的文件夹路径 TOP
-GroundTruth = np.loadtxt('D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-02\\gt\\gt.txt', delimiter=',' , usecols=[0,12,13,18])      #存放正视图GroundTruth的文件夹路径 Front
+GroundTruth = np.loadtxt('D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt\\gt.txt', delimiter=',' , usecols=[0,5,6,11]) #存放顶视图GroundTruth的文件夹路径 TOP
+#GroundTruth = np.loadtxt('D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-01\\gt\\gt.txt', delimiter=',' , usecols=[0,12,13,18])      #存放正视图GroundTruth的文件夹路径 Front
 print(GroundTruth.shape)
 
-#radius = [25,25]    #======================
-radius = [12,13]
+radius = [12,13]    #======================TOP
+#radius = [25,25]    #======================Front
 
 def Single_txt2xml(count,xml_path):
     node_root = Element('annotation')
     node_folder = SubElement(node_root, 'folder')
-    node_folder.text = 'Zebrafish-02-F'                    #=============================
+    node_folder.text = 'Zebrafish-02-T'                    #=============================
     node_filename = SubElement(node_root, 'filename')
     node_filename.text = str(count).rjust(6,'0')+".jpg"
     node_size = SubElement(node_root, 'size')
@@ -59,7 +59,7 @@ def Single_txt2xml(count,xml_path):
 
 count = 1
 while(count<=900):            #=====================01-7188 02-900
-    Filename = "D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-02\\XML-F-Head\\" + str(count).rjust(6,'0')+ '.xml'  #=====================
+    Filename = "D:\\bishe\\3DZeF20\\3DZeF20\\train\\ZebraFish-02\\XML-T-Head\\" + str(count).rjust(6,'0')+ '.xml'  #=====================
     Single_txt2xml(count,Filename)
     count = count + 1
 print("Done")
