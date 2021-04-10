@@ -262,8 +262,8 @@ class TrackFinalizer:    # 插值
             spatialDiff: Spatial distance between tracks    空间距离
             intersecting_frames: Amount of time there is a detection at the same frame in both tracks    交叠的帧号
             intersection_ratio: intersecting_frames as a ratio of the length of the gallery track    交叠率
-            internalTemporalDist: Mean temporal distance when combining two overlapping tracks    
-            internalSpatialDist: Mean spatial distance when combining two overlapping tracks    
+            internalTemporalDist: Mean temporal distance when combining two overlapping tracks    内部时间距离
+            internalSpatialDist: Mean spatial distance when combining two overlapping tracks    内部空间距离
             trackIndecies: Dict of indecies, idnicating which detections from each track should be used, in case of overlapping tracks    索引字典 那些
             trackOrder: Temporal order of tracks
             validTrack: Whether the track is valid i.e. whether all values are within user defiend thresholds    是否为有效的轨迹 是否在用户设置的阈值之间
@@ -922,7 +922,7 @@ class TrackFinalizer:    # 插值
                             _, overlap = self.getTemporalOverlap( self.tracks[tr1], self.tracks[tr2])
                             med_overlap.append(overlap)
 
-                            if overlap < min_overlap:
+                            if overlap < min_overlap:    # 交叠
                                 valid_set = False
                                 no_overlap_dict[tr1].append(tr2)
                                 no_overlap_dict[tr2].append(tr1)
@@ -989,7 +989,7 @@ class TrackFinalizer:    # 插值
                         if paths[idx1][idx3] != paths[idx2][idx3]:
                             print("ERROR {}-{}-{} / {}-{}-{}".format(idx1, idx3, paths[idx1][idx3], idx2, idx3, paths[idx2][idx3]))
 
-        return paths[0]
+        return paths[0]    # 去一个方括号（去列表）
     
 
 def updateIds(df, paths, verbose=True):

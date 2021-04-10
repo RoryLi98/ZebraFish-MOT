@@ -355,14 +355,14 @@ def frameConsistencyGraph(indecies, frames, coord, verbose = False):    # 创建
                 for tpl in prevNodes:
                     pNode, pIdx = tpl
                     
-                    dist = np.linalg.norm(coord[pIdx][0] - coord[cIdx][0])    # 求当前点与某旧点的欧氏距离  不懂为什么要加[0]
+                    dist = np.linalg.norm(coord[pIdx][0] - coord[cIdx][0])    # 求当前点与某旧点的欧氏距离  不懂为什么要加[0] 去列表？
                     if(dist == 0):
                         if verbose:
                             print("0 distance between frame {} and {} - sorted indexes: {} and {}".format(frames[pIdx], frames[cIdx], pIdx, cIdx))
                         zeroCounter += 1    # 零计数量
                         weight = 1    # 权重设为1
                     else:
-                        weight = 1/dist    # 权重设为 欧氏距离的倒数
+                        weight = 1/dist    # 权重设为 欧氏距离的倒数    距离越大权值越小
                     graph.add_edge(pNode, cNode, weight = weight)     # 添加 pNode -> cNode 有权值的边
                     
                     if verbose:
@@ -379,8 +379,8 @@ def frameConsistencyGraph(indecies, frames, coord, verbose = False):    # 创建
     for idx in range(1, len(path)):
         pIdx = list_indecies[indecies == path[idx-1]]    # 利用bool值进行索引
         cIdx = list_indecies[indecies == path[idx]]      # 利用bool值进行索引
-        spatialDist.append(np.linalg.norm(coord[pIdx][0] - coord[cIdx][0]))    # 不懂为什么要加[0]
-        temporalDist.append(frames[cIdx][0] - frames[pIdx][0])    # 不懂为什么要加[0]
+        spatialDist.append(np.linalg.norm(coord[pIdx][0] - coord[cIdx][0]))    # 不懂为什么要加[0] 去列表？
+        temporalDist.append(frames[cIdx][0] - frames[pIdx][0])    # 不懂为什么要加[0] 去列表？
     
     if verbose:
         print()

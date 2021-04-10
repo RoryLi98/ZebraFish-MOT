@@ -626,7 +626,8 @@ if __name__ == '__main__':
                         cam2Positions = np.asarray(track3d.cam2positions)    # 交集的侧视2D坐标
 
                         frameDiff = track3DFrames - f
-                        validFrames = track3DFrames[np.abs(frameDiff) <= maxTemporalDiff]    # 交集中时间距离（帧数）在10及10以内，称为有效帧号
+                        validFrames = track3DFrames[np.abs(frameDiff) <= maxTemporalDiff]    # 交集中
+                        时间距离（帧数）在10及10以内，称为有效帧号
 
                         hist = np.zeros((3))
                         for f_t in validFrames:
