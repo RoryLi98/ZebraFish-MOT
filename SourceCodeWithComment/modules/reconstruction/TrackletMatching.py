@@ -69,7 +69,7 @@ class TrackletMatcher:    # 2D -> 3D
         self.trackletMinLength = c.getint('tracklet_min_length')
         self.temporalPenalty = c.getint('temporal_penalty')
         self.FPS = c.getint('FPS')
-        self.camera2_useHead = c.getboolean("cam2_head_detector", False)    # 是否使用的是FASTER R-CNN H
+        self.camera2_useHead = c.getboolean("cam2_head_detector", False)    # 是否使用的是FASTER R-CNN Head
 
         # Get aquarium size
         c = config['Aquarium']
@@ -202,7 +202,7 @@ class TrackletMatcher:    # 2D -> 3D
             track3d.reproj.append(err)
 
             ## Get the weight as the inverted CDF value.    逆累积分布函数
-            err = 1-scipy.stats.expon.cdf(err, scale=self.reprojMeanErr)
+            err = 1-scipy.stats.expon.cdf(err, scale=self.reprojMeanErr)    # reprojMeanErr为重投影均差，指数分数分布内的lambda
             
             if(self.withinAquarium(*pos3d)):    # 点是否在鱼缸
                 track3d.errors.append(err)
@@ -306,7 +306,7 @@ class TrackletMatcher:    # 2D -> 3D
             concurrent = self.findConcurrent(t,self.cam2Tracks)    # 求与该顶视轨迹 有交集的侧视轨迹实例集
             
             for c in concurrent:    # c 是每个track
-                weight,track3d = self.calcMatchWeight(t,c)    # 计算该顶视轨迹 与侧视轨迹交集 的权重
+                weight,track3d = self.calcMatchWeight(t,c)    # 计算该顶视轨迹 与侧视轨迹交集 的权重  误差越大，权值越小
                 if(weight <= 0.001) or track3d is None:    # 若权重小于0.001 或 track3d 为空，则不创建结点
                   continue
                 nodeName = "{0}-{1}".format(t.id,c.id)    # 轨迹名为 "{0}-{1}".format(t.id,c.id)
@@ -357,7 +357,7 @@ class TrackletMatcher:    # 2D -> 3D
             for trackId in self.camIdMap:     # 遍历camIdMap字典 其中 键为id，值为nodeName
                 elements = [e for e in self.camIdMap[trackId]]     # 键为id，值为nodeName，即取得所有nodeNmae
                     
-                for e1 in elements:    # 遍历每个nodeName
+                for e1 in elements:    # 遍历每个nodeName   两两遍历
                     e1Track = self.triangulated[e1]   # 取一个3D 轨迹实例
                     
                     for e2 in elements:    # 遍历每个nodeName
@@ -626,7 +626,7 @@ if __name__ == '__main__':
                         cam2Positions = np.asarray(track3d.cam2positions)    # 交集的侧视2D坐标
 
                         frameDiff = track3DFrames - f
-                        validFrames = track3DFrames[np.abs(frameDiff) <= maxTemporalDiff]    # 时间距离（帧数）在10及10以内，称为有效帧号
+                        validFrames = track3DFrames[np.abs(frameDiff) <= maxTemporalDiff]    # 交集中时间距离（帧数）在10及10以内，称为有效帧号
 
                         hist = np.zeros((3))
                         for f_t in validFrames:
