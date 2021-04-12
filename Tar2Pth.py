@@ -37,27 +37,27 @@ model = initializeModel(pretrained, num_classes)
 device = 'cuda'
 device = torch.device(device if torch.cuda.is_available() else "cpu")
 print(device)
-
+save_files={}
 checkpoint = torch.load("D:\\bishe\\FasterRCNN\\front_full_faster_RCNN_resnet50_30epochs.tar", map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])
-save_files = model.state_dict()
+save_files['model'] = model.state_dict()
 torch.save(save_files, "front_full_faster_RCNN_resnet50_30epochs.pth")
 print("Done")
 
 checkpoint = torch.load("D:\\bishe\\FasterRCNN\\front_head_faster_RCNN_resnet50_30epochs.tar", map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])
-save_files = model.state_dict()
+save_files['model'] = model.state_dict()
 torch.save(save_files, "front_head_faster_RCNN_resnet50_30epochs.pth")
 print("Done")
 
 checkpoint = torch.load("D:\\bishe\\FasterRCNN\\top_full_faster_RCNN_resnet50_30epochs.tar", map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])
-save_files = model.state_dict()
+save_files['model'] = model.state_dict()
 torch.save(save_files, "top_full_faster_RCNN_resnet50_30epochs.pth")
 print("Done")
 
 checkpoint = torch.load("D:\\bishe\\FasterRCNN\\top_head_faster_RCNN_resnet50_30epochs.tar", map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])
-save_files = model.state_dict()
+save_files['model'] = model.state_dict()
 torch.save(save_files, "top_head_faster_RCNN_resnet50_30epochs.pth")
 print("Done")
