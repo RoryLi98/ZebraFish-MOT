@@ -401,7 +401,7 @@ class TrackletMatcher:    # 2D -> 3D
                             print("\nEdge: {0} to {1} with weight: {2}".format(e1,e2, dist))
                         self.graph.add_edge(e1,e2,weight=dist)    # 加边
  
-        
+            
 def combine2DTracklets(df, tm):
     
     ids = df.id.unique() # array containing all unique tracklets ids    # 包含着所有轨迹ID
@@ -412,7 +412,7 @@ def combine2DTracklets(df, tm):
         df_id = df[df.id == iID]  # Sub dataframe, containing all rows relevant for the current ID. Indecies are still that of the main dataframe    取得该ID的行集
         
         frame_count = df_id["frame"].value_counts()  # How many times does a frame occur in the dataframe    # 计算该轨迹各帧号出现的次数
-        dual_assignment =  frame_count[frame_count == 2].sort_index() # isolating the frames with multiple assignments    # 得出出现两次的帧号并
+        dual_assignment =  frame_count[frame_count == 2].sort_index() # isolating the frames with multiple assignments    # 得出 出现两次的帧号并
 
         # GO through each frame with two assignments to the same ID
         for idx, sIdx in enumerate(dual_assignment.items()):
@@ -626,8 +626,8 @@ if __name__ == '__main__':
                         cam2Positions = np.asarray(track3d.cam2positions)    # 交集的侧视2D坐标
 
                         frameDiff = track3DFrames - f
-                        validFrames = track3DFrames[np.abs(frameDiff) <= maxTemporalDiff]    # 交集中
-                        时间距离（帧数）在10及10以内，称为有效帧号
+                        validFrames = track3DFrames[np.abs(frameDiff) <= maxTemporalDiff]    # 交集中 时间距离（帧数）在10及10以内，称为有效帧号
+                        
 
                         hist = np.zeros((3))
                         for f_t in validFrames:
@@ -661,9 +661,9 @@ if __name__ == '__main__':
             csv = csv.append(df)
                        
             # Remove used tracklets
-            toBeRemoved.append(p)    # 添加已处理的结点（nodeName）          
-            cam1 = tm.camIdMap[tm.graph.nodes[p]["cam1"]]    # =====
-            cam2 = tm.camIdMap[tm.graph.nodes[p]["cam2"]]    # ====
+            toBeRemoved.append(p)    # 添加已处理的结点（nodeName） 和 各视角同轨迹ID的结点         
+            cam1 = tm.camIdMap[tm.graph.nodes[p]["cam1"]]    
+            cam2 = tm.camIdMap[tm.graph.nodes[p]["cam2"]]    
             for e in (cam1+cam2):    # ==== 
                 if(e not in toBeRemoved):    # ====
                     toBeRemoved.append(e)    # ====

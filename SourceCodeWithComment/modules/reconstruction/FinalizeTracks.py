@@ -416,7 +416,7 @@ class TrackFinalizer:    # 插值
         voteSum = np.zeros(self.n_fish)
         metrics = 0
         for key in res:
-            votes[np.argmin(res[key])] += 1
+            votes[np.argmin(res[key])] += 1    # 取各个属性的最小代价作为配对主轨迹的投票
             voteSum += res[key]
             metrics += 1
         
