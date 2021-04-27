@@ -139,7 +139,7 @@ class TrackFinalizer:    # 插值
         return np.linalg.norm(gt3D - mt3D)    # 求二范数 即空间欧式距离
 
 
-    def getInternalDistances(self, mainTrack, galleryTrack):    # 不懂
+    def getInternalDistances(self, mainTrack, galleryTrack):   
         '''
         Determines spatio-temporal distances when two tracks overlap (Using only the known 3D positions).    当轨迹交叠时，确定两条轨道重叠时的时空距离
         This is done by constructing a graph, where each node is a detection in a frame, and the edge weights are the reciprocal spatial distance between the adjacent nodes
@@ -164,7 +164,7 @@ class TrackFinalizer:    # 插值
         start = max(mtStart, gtStart)    # 交集起点
         end = min(mtEnd, gtEnd)          # 交集终点
 
-        frames = list(np.linspace(start, end, end-start+1, dtype=np.int))    # 做等差数组 即交集的每帧
+        frames = list(np.linspace(start, end, end-start+1, dtype=np.int))    # 做等差数组 即填补满交集的每帧
 
         ## Add the detections just before/after the intersection, if there are any
         for track in [mainTrack, galleryTrack]:
@@ -180,15 +180,15 @@ class TrackFinalizer:    # 插值
         ## Create a dataframe containing all the relevant detections
         track_id = "{}-{}".format(mainTrack.id, galleryTrack.id)
         df_total = pd.DataFrame()
-        for frame in frames:
+        for frame in frames:    # 取出主副轨迹的交叠部分的三维信息
             for track in [mainTrack, galleryTrack]:
                 if frame in track.frame:
-                    index = track.frame == frame    # 选出等于 frame的行号
+                    index = track.frame == frame    # 选出等于 frame 的行号
                     
                     # print(index)
                     # print(track.id)
                     # print(track.frame)
-                    if track.x[index] == -1:
+                    if track.x[index] == -1:    # 且有3D位置的帧号
                         continue
 
                     df = pd.DataFrame({
@@ -283,8 +283,8 @@ class TrackFinalizer:    # 插值
         # If tracks are overlapping, get internal spatio-temporal distances. Else set to invalid values    若轨迹有交叠
         if temporalShift == -1:    # 有交叠
             internalSpatialDistM, internalTemporalDistM, trackIndecies = self.getInternalDistances(mt, gt) # trackIndecies = 字典 id：[True, True, False, True, False, False, True, True, False]
-            internalSpatialDist = np.mean(internalSpatialDistM)    # 平均 内空间误差
-            internalTemporalDist = np.mean(internalTemporalDistM)    # 平均 内时间误差
+            internalSpatialDist = np.mean(internalSpatialDistM)    # 切换时的空间距离平均值作为内空间误差
+            internalTemporalDist = np.mean(internalTemporalDistM)    # 切换时的时间距离平均值作为内时间误差
         else:    # 无交叠
             internalSpatialDist = -1
             internalTemporalDist = -1
@@ -417,7 +417,7 @@ class TrackFinalizer:    # 插值
         metrics = 0
         for key in res:
             votes[np.argmin(res[key])] += 1    # 取各个属性的最小代价作为配对主轨迹的投票
-            voteSum += res[key]
+            voteSum += res[key]    # 值都加起来
             metrics += 1
         
         if verbose:
@@ -426,7 +426,7 @@ class TrackFinalizer:    # 插值
             print("Vote Sum {}".format(voteSum))
             print("Normalized Vote Sum {}".format(voteSum / metrics))
 
-        votes = voteSum/metrics
+        votes = voteSum/metrics    # 归一化
 
         # Check if the tracks are equally probable    是否等概率可能
         if self.n_fish > 1:

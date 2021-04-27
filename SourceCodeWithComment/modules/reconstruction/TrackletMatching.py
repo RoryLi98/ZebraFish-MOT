@@ -221,7 +221,7 @@ class TrackletMatcher:    # 2D -> 3D
             frameList.append(f)    # 筛选掉推测点不在鱼缸内的frame
             
         if len(track3d.errors) > 0:
-            track3d.frame = np.array(frameList)      # track3d.frame 为 交集的帧号集
+            track3d.frame = np.array(frameList)      # track3d.frame 为交集的帧号集
             weight = np.median(track3d.errors) * (len(track3d.errors)/len(list(np.union1d(track1.frame, track2.frame))))    # 权重= errors的中位数 * (errors的长度/t1帧数 ∩ t2帧数）
             return weight,track3d    
         else:
