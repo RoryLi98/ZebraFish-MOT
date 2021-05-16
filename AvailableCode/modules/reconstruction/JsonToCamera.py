@@ -10,7 +10,7 @@ import sys
 from sklearn.externals import joblib
 
 import sys
-sys.path.append('D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\')
+sys.path.append('../../')
 from modules.reconstruction.Camera import Camera
 
 ap = argparse.ArgumentParser()

@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 ### Module imports ###
 import sys
-sys.path.append('D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\')
+sys.path.append('../../')
 from modules.reconstruction.Triangulate import Triangulate
 
 class Camera:

@@ -11,7 +11,7 @@ from itertools import combinations
 
 ### Module imports ###
 import sys
-sys.path.append('D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\')
+sys.path.append('../../')
 from common.utility import prepareCams, csv2Tracks, readConfig, getTrackletFeatures, frameConsistencyGraph, getDropIndecies
 from common.Track import Track
 from modules.reconstruction.Triangulate import Triangulate

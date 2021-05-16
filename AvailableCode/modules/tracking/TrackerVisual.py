@@ -9,7 +9,7 @@ from sklearn.metrics.pairwise import pairwise_distances
 
 ### Module imports ###
 import sys
-sys.path.append('D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\')
+sys.path.append('../../')
 from common.Track import Track
 from modules.detection.BgDetector import BgDetector
 from modules.detection.ExtractBackground import BackgroundExtractor

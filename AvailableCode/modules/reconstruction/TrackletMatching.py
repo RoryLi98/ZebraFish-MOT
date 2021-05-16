@@ -8,7 +8,7 @@ import cv2
 import scipy.stats
 ### Module imports ###
 import sys
-sys.path.append('D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\')
+sys.path.append('../../')
 from common.utility import csv2Tracks,readConfig, getDropIndecies, prepareCams
 from common.Track import Track
 from modules.reconstruction.Triangulate import Triangulate

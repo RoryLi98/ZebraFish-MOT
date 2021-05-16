@@ -4,7 +4,7 @@ import os.path
 import sys
 import configparser
 import numpy as np
-sys.path.append('D:\\bishe\\aauvap-3d-zef-7230261dcb99\\aauvap-3d-zef-7230261dcb99\\')
+sys.path.append('../../')
 from common.utility import *
 
 class BackgroundExtractor():
